@@ -1,0 +1,95 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 4%;
+    --foreground: 210 40% 95%;
+    --card: 222 40% 6%;
+    --card-foreground: 210 40% 95%;
+    --primary: 222 100% 67%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 262 80% 65%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 30% 15%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 262 80% 65%;
+    --accent-foreground: 210 40% 98%;
+    --border: 222 30% 12%;
+    --input: 222 30% 12%;
+    --ring: 222 100% 67%;
+    --radius: 0.75rem;
+
+    --sidebar-width: 16rem;
+    --sidebar-collapsed: 4.5rem;
+    --header-height: 4rem;
+  }
+
+  .light {
+    --background: 220 20% 97%;
+    --foreground: 222 47% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 8%;
+    --primary: 222 100% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 262 70% 58%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 15% 93%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 262 70% 58%;
+    --accent-foreground: 210 40% 98%;
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
+    --ring: 222 100% 58%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { @apply scroll-smooth; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+  .gradient-bg {
+    @apply bg-gradient-to-br from-primary to-secondary;
+  }
+  .glass {
+    @apply bg-card/80 backdrop-blur-xl border border-border;
+  }
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .sidebar-item {
+    @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200;
+  }
+  .sidebar-item-active {
+    @apply bg-primary/10 text-primary;
+  }
+  .sidebar-item-inactive {
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted/50;
+  }
+  .sidebar-item-disabled {
+    @apply text-muted-foreground/40 cursor-not-allowed;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
