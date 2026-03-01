@@ -2,8 +2,9 @@
 // src/components/dashboard/header.tsx
 import { useSession } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
-import { Menu, Search, Bell } from 'lucide-react'
+import { Menu, Bell } from 'lucide-react'
 import { UserMenu } from './user-menu'
+import { GlobalSearch } from './global-search'
 import { cn } from '@/lib/utils'
 
 interface HeaderProps {
@@ -60,10 +61,8 @@ export function Header({ collapsed, onMenuClick }: HeaderProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-2">
-        {/* Search */}
-        <button className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <Search className="w-4.5 h-4.5" />
-        </button>
+        {/* Global Search */}
+        <GlobalSearch />
 
         {/* Notifications */}
         <button className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors relative">

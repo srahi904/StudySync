@@ -1,6 +1,7 @@
 // src/components/dashboard/stats-card.tsx
 import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
+import Link from 'next/link'
 
 interface StatsCardProps {
   icon: LucideIcon
@@ -10,6 +11,7 @@ interface StatsCardProps {
   trend?: string
   trendUp?: boolean
   color: 'blue' | 'purple' | 'green' | 'orange'
+  href?: string
 }
 
 const colorMap = {
@@ -19,11 +21,11 @@ const colorMap = {
   orange: { bg: 'bg-orange-500/10', text: 'text-orange-400', ring: 'ring-orange-500/20' },
 }
 
-export function StatsCard({ icon: Icon, title, value, subtitle, trend, trendUp, color }: StatsCardProps) {
+export function StatsCard({ icon: Icon, title, value, subtitle, trend, trendUp, color, href }: StatsCardProps) {
   const c = colorMap[color]
 
-  return (
-    <div className="bg-card border border-border rounded-2xl p-5 hover:border-border/80 hover:shadow-lg hover:shadow-black/5 transition-all duration-300 group">
+  const content = (
+    <>
       <div className="flex items-start justify-between mb-4">
         <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center ring-1', c.bg, c.ring)}>
           <Icon className={cn('w-5 h-5', c.text)} />
@@ -39,6 +41,14 @@ export function StatsCard({ icon: Icon, title, value, subtitle, trend, trendUp, 
       </div>
       <p className="text-2xl font-bold mb-0.5 group-hover:gradient-text transition-all">{value}</p>
       <p className="text-xs text-muted-foreground">{title} · {subtitle}</p>
-    </div>
+    </>
   )
+
+  const classes = "bg-card border border-border rounded-2xl p-5 hover:border-border/80 hover:shadow-lg hover:shadow-black/5 transition-all duration-300 group"
+
+  if (href) {
+    return <Link href={href} className={classes}>{content}</Link>
+  }
+
+  return <div className={classes}>{content}</div>
 }

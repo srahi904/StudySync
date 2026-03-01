@@ -1,61 +1,53 @@
-// prisma/schema.prisma
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model User {
-  id             String    @id @default(cuid())
-  name           String
-  email          String    @unique
-  emailVerified  DateTime?
-  image          String?
-  password       String?   // null for OAuth users
-  role           UserRole  @default(USER)
-
-  // OAuth
-  accounts       Account[]
-  sessions       Session[]
-
-  // Profile (filled in onboarding)
-  bio            String?   @db.Text
-  university     String?
-  major          String?
-  graduationYear Int?
-  onboarded      Boolean   @default(false)
-  profileCompleted Boolean @default(false)
-
-  // Avatar & cover
-  avatar         String?
-  coverPhoto     String?
-
-  // Personal details
-  phoneNumber    String?
-  dateOfBirth    DateTime?
-  gender         Gender?
-  location       String?
-  currentYear    String?   // "1st Year", "2nd Year", etc.
-
-  // Social links
-  linkedinUrl    String?
-  githubUrl      String?
-  twitterUrl     String?
-  websiteUrl     String?
-
-  // Study preferences
+  id                 String          @id @default(cuid())
+  name               String
+  email              String          @unique
+  emailVerified      DateTime?
+  image              String?
+  password           String?
+  role               UserRole        @default(USER)
+  bio                String?
+  university         String?
+  major              String?
+  graduationYear     Int?
+  onboarded          Boolean         @default(false)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  lastActiveAt       DateTime        @default(now())
+  avatar             String?
+  coverPhoto         String?
+  currentYear        String?
+  dateOfBirth        DateTime?
+  gender             Gender?
+  githubUrl          String?
+  linkedinUrl        String?
+  location           String?
+  phoneNumber        String?
   preferredStudyTime String?
-  studyGoals     String[]  @default([])
-  subjects       String[]  @default([])
-
-  // Timestamps
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  lastActiveAt   DateTime  @default(now())
+  profileCompleted   Boolean         @default(false)
+  studyGoals         String[]        @default([])
+  subjects           String[]        @default([])
+  twitterUrl         String?
+  websiteUrl         String?
+  accounts           Account[]
+  materialsSharedBy  MaterialShare[] @relation("SharedByUser")
+  sharedMaterials    MaterialShare[] @relation("SharedMaterials")
+  materials          Material[]      @relation("UserMaterials")
+  sessions           Session[]
+  aiConversations    AiConversation[] @relation("UserConversations")
+  aiTokensUsed       Int              @default(0)
+  aiTokensLimit      Int              @default(100000)
 
   @@index([email])
   @@index([role])
@@ -68,15 +60,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -88,23 +79,82 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("sessions")
 }
 
 model VerificationToken {
-  id         String   @id @default(cuid())
-  identifier String   // email
-  token      String   @unique
+  id         String    @id @default(cuid())
+  identifier String
+  token      String    @unique
   type       TokenType @default(EMAIL_VERIFICATION)
   expires    DateTime
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model Material {
+  id            String             @id @default(cuid())
+  title         String
+  description   String?
+  type          MaterialType
+  fileUrl       String
+  fileName      String
+  fileSize      Int
+  mimeType      String
+  userId        String
+  subject       String?
+  tags          String[]           @default([])
+  status        MaterialStatus     @default(PENDING)
+  embeddings    Json?
+  isProcessed   Boolean            @default(false)
+  processedAt   DateTime?
+  chunkCount    Int?
+  processingStatus ProcessingStatus @default(PENDING)
+  processingError String?
+  viewCount     Int                @default(0)
+  downloadCount Int                @default(0)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  visibility    MaterialVisibility @default(PRIVATE)
+  sharedWith    MaterialShare[]    @relation("MaterialShares")
+  user          User               @relation("UserMaterials", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([subject])
+  @@index([status])
+  @@index([visibility])
+  @@index([createdAt])
+  @@map("materials")
+}
+
+model MaterialShare {
+  id               String    @id @default(cuid())
+  materialId       String
+  sharedWithUserId String
+  sharedByUserId   String
+  canDownload      Boolean   @default(true)
+  canEdit          Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  expiresAt        DateTime?
+  material         Material  @relation("MaterialShares", fields: [materialId], references: [id], onDelete: Cascade)
+  sharedBy         User      @relation("SharedByUser", fields: [sharedByUserId], references: [id], onDelete: Cascade)
+  sharedWithUser   User      @relation("SharedMaterials", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+
+  @@unique([materialId, sharedWithUserId])
+  @@index([sharedWithUserId])
+  @@index([materialId])
+  @@map("material_shares")
+}
+
+enum MaterialVisibility {
+  PUBLIC
+  PRIVATE
+  GROUP_ONLY
 }
 
 enum UserRole {
@@ -124,4 +174,86 @@ enum Gender {
   FEMALE
   OTHER
   PREFER_NOT_TO_SAY
+}
+
+enum MaterialType {
+  PDF
+  DOCUMENT
+  PRESENTATION
+  SPREADSHEET
+  IMAGE
+  VIDEO
+  AUDIO
+  TEXT
+  OTHER
+}
+
+enum MaterialStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSING
+  FAILED
+}
+
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum AiMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model AiConversation {
+  id            String      @id @default(cuid())
+  title         String      @default("New Conversation")
+  userId        String
+  user          User        @relation("UserConversations", fields: [userId], references: [id], onDelete: Cascade)
+  materialIds   String[]    @default([])
+  model         String      @default("gpt-4-turbo-preview")
+  temperature   Float       @default(0.7)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  lastMessageAt DateTime?
+  messages      AiMessage[]
+  
+  @@index([userId])
+  @@index([lastMessageAt])
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id               String         @id @default(cuid())
+  conversationId   String
+  conversation     AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role             AiMessageRole
+  content          String         @db.Text
+  sources          Json?
+  promptTokens     Int?
+  completionTokens Int?
+  totalTokens      Int?
+  createdAt        DateTime       @default(now())
+  
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("ai_messages")
+}
+
+
+model MaterialChunk {
+  id          String    @id @default(cuid())
+  materialId  String
+  chunkText   String    @map("chunk_text") @db.Text
+  chunkIndex  Int       @map("chunk_index")
+  embedding   Unsupported("vector(3072)")   // ← matches gemini-embedding-001
+  metadata    Json?     @default("{}")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([materialId], map: "material_chunks_material_id_idx")
+  @@map("material_chunks")
 }

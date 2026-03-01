@@ -1,6 +1,6 @@
 'use client'
 // src/app/(auth)/reset-password/page.tsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -13,7 +13,7 @@ import { PasswordInput } from '@/components/auth/password-input'
 import { PasswordStrength } from '@/components/auth/password-strength'
 import { useToast } from '@/components/ui/use-toast'
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token') ?? ''
   const router = useRouter()
@@ -131,5 +131,13 @@ export default function ResetPasswordPage() {
         </Button>
       </form>
     </>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-48 text-muted-foreground text-sm">Loading...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
   )
 }

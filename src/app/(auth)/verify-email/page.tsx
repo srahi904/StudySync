@@ -1,6 +1,6 @@
 'use client'
 // src/app/(auth)/verify-email/page.tsx
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
@@ -8,7 +8,7 @@ import { Mail, CheckCircle, XCircle, RefreshCw, ShieldCheck } from 'lucide-react
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const email = searchParams.get('email') ?? ''
   const router = useRouter()
@@ -208,8 +208,20 @@ export default function VerifyEmailPage() {
       </div>
 
       <Link href="/signup" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-        ← Use a different email
+        → Use a different email
       </Link>
     </div>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   )
 }

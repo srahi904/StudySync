@@ -58,8 +58,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       return (
         <Slot
           className={cn(buttonVariants({ variant, size, className }))}
-          ref={ref}
-          disabled={disabled || loading}
+          ref={ref as any}
+          aria-disabled={disabled || loading}
           {...props}
         >
           {children}

@@ -3,7 +3,12 @@
 import { Clock, BookOpen, Award, Flame } from 'lucide-react'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { QuickActions } from '@/components/dashboard/quick-actions'
-import { ActivityFeed } from '@/components/dashboard/activity-feed'
+import dynamic from 'next/dynamic'
+
+const ActivityFeed = dynamic(() => import('@/components/dashboard/activity-feed').then(m => m.ActivityFeed))
+const TrendingMaterials = dynamic(() => import('@/components/dashboard/trending-materials').then(m => m.TrendingMaterials))
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -13,11 +18,28 @@ function getGreeting() {
 }
 
 interface DashboardClientProps {
-  user: { name?: string | null; email?: string | null }
+  user: { name?: string | null; email?: string | null; id?: string }
 }
 
 export function DashboardClient({ user }: DashboardClientProps) {
   const firstName = user.name?.split(' ')[0] || 'there'
+  const [materialsCount, setMaterialsCount] = useState<{ total: number; thisWeek: number } | null>(null)
+  const [recentMaterials, setRecentMaterials] = useState<any[]>([])
+
+  // Fetch live dashboard stats
+  useEffect(() => {
+    // Materials count
+    fetch('/api/materials/count')
+      .then(r => r.json())
+      .then(d => { if (d.success) setMaterialsCount(d.data) })
+      .catch(() => {})
+
+    // Recent materials (last 3)
+    fetch('/api/materials?page=1&limit=3&sortBy=date&sortOrder=desc')
+      .then(r => r.json())
+      .then(d => { if (d.success) setRecentMaterials(d.data.materials) })
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="space-y-8">
@@ -43,9 +65,12 @@ export function DashboardClient({ user }: DashboardClientProps) {
         <StatsCard
           icon={BookOpen}
           title="Materials"
-          value="0"
+          value={materialsCount ? materialsCount.total.toString() : '—'}
           subtitle="Total uploaded"
+          trend={materialsCount ? `+${materialsCount.thisWeek} this week` : undefined}
+          trendUp={true}
           color="purple"
+          href="/materials"
         />
         <StatsCard
           icon={Award}
@@ -71,8 +96,40 @@ export function DashboardClient({ user }: DashboardClientProps) {
         <QuickActions />
       </div>
 
+      {/* Recent Materials Widget */}
+      {recentMaterials.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">Recently Uploaded</h2>
+            <Link href="/materials" className="text-sm text-primary hover:underline">
+              View all →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {recentMaterials.map((m: any) => (
+              <Link
+                key={m.id}
+                href={`/materials/${m.id}`}
+                className="group flex items-start gap-3 p-4 rounded-xl border border-border bg-card hover:shadow-md hover:border-primary/30 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-5 h-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{m.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{m.subject || m.type}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Activity Feed */}
       <ActivityFeed />
+
+      {/* Trending Materials */}
+      <TrendingMaterials />
     </div>
   )
 }

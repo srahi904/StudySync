@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react'
 import {
   Home, BookOpen, Bot, MessageSquare, Users, Heart,
   Award, BarChart3, Settings, ChevronLeft, ChevronRight,
-  Zap, LogOut, User, X,
+  Zap, LogOut, User, X, Share2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOut } from 'next-auth/react'
@@ -15,8 +15,9 @@ import { getInitials } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: Home, href: '/dashboard' },
-  { label: 'Materials', icon: BookOpen, href: '/materials', disabled: true },
-  { label: 'AI Assistant', icon: Bot, href: '/ai-assistant', disabled: true },
+  { label: 'Materials', icon: BookOpen, href: '/materials' },
+  { label: 'Shared With Me', icon: Share2, href: '/materials/shared-with-me' },
+  { label: 'AI Assistant', icon: Bot, href: '/ai-assistant' },
   { label: 'Chat', icon: MessageSquare, href: '/chat', disabled: true },
   { label: 'Groups', icon: Users, href: '/groups', disabled: true },
   { label: 'Matching', icon: Heart, href: '/matching', disabled: true },

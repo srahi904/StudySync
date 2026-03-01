@@ -7,12 +7,13 @@ import { ProfileView } from '@/components/profile/profile-view'
 
 export const metadata = { title: 'Profile' }
 
-export default async function UserProfilePage({ params }: { params: { userId: string } }) {
+export default async function UserProfilePage({ params }: { params: Promise<{ userId: string }> }) {
+  const { userId } = await params
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
 
   const user = await prisma.user.findUnique({
-    where: { id: params.userId },
+    where: { id: userId },
     select: {
       id: true, name: true, email: true, avatar: true, coverPhoto: true, image: true,
       bio: true, university: true, major: true, graduationYear: true,

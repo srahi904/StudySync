@@ -1,77 +1,58 @@
-// src/lib/utils.ts
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
-import crypto from 'crypto'
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
-// ─── Tailwind class merger ─────────────────────────────────
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// ─── Token generation ──────────────────────────────────────
-export function generateToken(length = 32): string {
-  return crypto.randomBytes(length).toString('hex')
+export function generateToken() {
+  return require('crypto').randomBytes(32).toString('hex')
 }
 
-export function generateOTP(): string {
+export function addHours(date: Date, hours: number) {
+  const newDate = new Date(date)
+  newDate.setHours(newDate.getHours() + hours)
+  return newDate
+}
+
+export function getInitials(name: string) {
+  const parts = name.split(' ')
+  let initials = ''
+  for (let i = 0; i < Math.min(2, parts.length); i++) {
+    if (parts[i].length > 0 && parts[i] !== '') {
+      initials += parts[i][0]
+    }
+  }
+  return initials.toUpperCase()
+}
+
+export function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
-// ─── Date helpers ──────────────────────────────────────────
-export function addMinutes(date: Date, minutes: number): Date {
-  return new Date(date.getTime() + minutes * 60 * 1000)
+export function addMinutes(date: Date, minutes: number) {
+  const newDate = new Date(date)
+  newDate.setMinutes(newDate.getMinutes() + minutes)
+  return newDate
 }
 
-export function addHours(date: Date, hours: number): Date {
-  return new Date(date.getTime() + hours * 60 * 60 * 1000)
-}
-
-export function addDays(date: Date, days: number): Date {
-  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000)
-}
-
-export function isExpired(date: Date): boolean {
-  return new Date() > date
-}
-
-// ─── String helpers ────────────────────────────────────────
-export function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
-
-export function formatDate(date: Date): string {
+export function formatDate(date: string | Date | number) {
   return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
-  }).format(date)
+    year: 'numeric'
+  }).format(new Date(date))
 }
 
-// ─── Password strength ─────────────────────────────────────
-export function getPasswordStrength(password: string): {
-  score: number
-  label: string
-  color: string
-} {
+export function getPasswordStrength(password: string) {
   let score = 0
-  if (password.length >= 8) score++
-  if (/[A-Z]/.test(password)) score++
-  if (/[a-z]/.test(password)) score++
-  if (/[0-9]/.test(password)) score++
-  if (/[^A-Za-z0-9]/.test(password)) score++
-
-  const levels = [
-    { label: 'Very Weak', color: 'bg-red-500' },
-    { label: 'Weak', color: 'bg-red-400' },
-    { label: 'Fair', color: 'bg-yellow-500' },
-    { label: 'Good', color: 'bg-yellow-400' },
-    { label: 'Strong', color: 'bg-green-500' },
-  ]
-
-  return { score, ...levels[score] }
+  if (!password) return { score: 0, label: 'Weak', color: 'bg-red-500' }
+  if (password.length >= 8) score += 1
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1
+  if (/\d/.test(password)) score += 1
+  if (/[^a-zA-Z0-9]/.test(password)) score += 1
+  
+  if (score < 2) return { score, label: 'Weak', color: 'bg-red-500' }
+  if (score < 4) return { score, label: 'Good', color: 'bg-yellow-500' }
+  return { score, label: 'Strong', color: 'bg-green-500' }
 }
