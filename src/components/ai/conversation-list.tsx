@@ -1,84 +1,116 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { MessageSquare, Plus, Trash2 } from 'lucide-react';
 
-export function ConversationList({ 
-  onSelectConversation, 
-  currentConversationId 
-}: { 
-  onSelectConversation: (id: string | null) => void,
-  currentConversationId: string | null
+export function ConversationList({
+  onSelectConversation,
+  currentConversationId,
+}: {
+  onSelectConversation: (id: string | null) => void;
+  currentConversationId: string | null;
 }) {
   const [conversations, setConversations] = useState<any[]>([]);
+  const [loadedOnce, setLoadedOnce] = useState(false);
 
-  const fetchConversations = () => {
-    fetch('/api/ai/conversations')
-      .then(res => res.ok ? res.json() : [])
-      .then(data => Array.isArray(data) ? setConversations(data) : [])
-      .catch(() => setConversations([]));
+  const fetchConversations = (signal?: AbortSignal) => {
+    fetch('/api/ai/conversations?limit=30', { signal })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        setLoadedOnce(true);
+        setConversations(Array.isArray(data) ? data : []);
+      })
+      .catch((error) => {
+        if ((error as Error)?.name === 'AbortError') return;
+        setLoadedOnce(true);
+        setConversations([]);
+      });
   };
 
   useEffect(() => {
-    fetchConversations();
-  }, [currentConversationId]);
+    const controller = new AbortController();
+    fetchConversations(controller.signal);
+    return () => controller.abort();
+  }, []);
+
+  // Only refetch when a new conversation id appears that is not already in sidebar.
+  useEffect(() => {
+    if (!currentConversationId || !loadedOnce) return;
+
+    const exists = conversations.some((conv) => conv.id === currentConversationId);
+    if (!exists) {
+      fetchConversations();
+    }
+  }, [currentConversationId, conversations, loadedOnce]);
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm('Are you sure you want to delete this chat?')) return;
+    if (!confirm('Delete this conversation?')) return;
 
     try {
       const res = await fetch(`/api/ai/conversations/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        if (currentConversationId === id) {
-          onSelectConversation(null); // Clear selected chat if deleted
-        } else {
-          fetchConversations(); // Refresh list
-        }
+      if (!res.ok) return;
+
+      if (currentConversationId === id) {
+        onSelectConversation(null);
+        fetchConversations();
+      } else {
+        fetchConversations();
       }
-    } catch (err) {
-      console.error('Failed to delete conversation:', err);
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-3 shadow-inner">
-      <button 
+    <div className="flex h-full flex-col p-4">
+      <button
         onClick={() => onSelectConversation(null)}
-        className="mb-4 flex items-center justify-center gap-2 p-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors w-full shadow-md active:scale-95"
+        className="mb-4 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 font-semibold text-white transition hover:bg-blue-500"
       >
-        <span>+</span> New Chat
+        <Plus className="h-4 w-4" />
+        New Chat
       </button>
 
-      <div className="flex-1 overflow-y-auto space-y-2">
-        <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400 px-2 py-1 tracking-widest uppercase">History</h3>
+      <div className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        History
+      </div>
+
+      <div className="flex-1 space-y-2 overflow-y-auto pr-1">
         {conversations.length === 0 ? (
-          <p className="text-xs text-slate-500 dark:text-slate-400 px-2 italic">Nothing here yet</p>
+          <div className="rounded-xl border border-border bg-background/40 p-4 text-sm text-muted-foreground">
+            No conversations yet.
+          </div>
         ) : (
-          conversations.map(conv => (
-            <div 
-              key={conv.id} 
-              className={`flex items-center justify-between group rounded-lg transition-all ${
-                currentConversationId === conv.id 
-                  ? 'bg-blue-100/50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 border border-blue-200 dark:border-blue-800 font-medium' 
-                  : 'hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-transparent hover:border-slate-300 dark:hover:border-slate-700'
-              }`}
-            >
-              <button
-                onClick={() => onSelectConversation(conv.id)}
-                className="flex-1 text-left truncate text-sm px-3 py-2 w-full"
+          conversations.map((conv) => {
+            const isActive = currentConversationId === conv.id;
+
+            return (
+              <div
+                key={conv.id}
+                className={`group flex items-center gap-2 rounded-xl border px-3 py-2 transition ${
+                  isActive
+                    ? 'border-primary/40 bg-primary/10 text-foreground'
+                    : 'border-border bg-background/40 text-foreground hover:border-border/80'
+                }`}
               >
-                {conv.title}
-              </button>
-              <button
-                onClick={(e) => handleDelete(e, conv.id)}
-                className={`p-2 text-slate-400 hover:text-red-500 transition-colors ${currentConversationId === conv.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                title="Delete chat"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))
+                <button
+                  onClick={() => onSelectConversation(conv.id)}
+                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                >
+                  <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="truncate text-sm">{conv.title}</span>
+                </button>
+                <button
+                  onClick={(e) => handleDelete(e, conv.id)}
+                  className="rounded-md p-1 text-muted-foreground transition hover:bg-red-500/20 hover:text-red-300 opacity-0 group-hover:opacity-100"
+                  title="Delete"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            );
+          })
         )}
       </div>
     </div>
