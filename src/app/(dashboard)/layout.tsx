@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
@@ -12,6 +13,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const { data: session, status } = useSession()
+  const pathname = usePathname()
+  const isAIAssistantRoute = pathname === '/ai-assistant' || pathname.startsWith('/ai-assistant/')
 
   if (status === 'loading') {
     return (
@@ -44,11 +47,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <main
         className={cn(
-          'transition-all duration-300 pt-0 pb-20 lg:pb-8 px-4 md:px-6 lg:px-8',
+          'transition-all duration-300 pt-0 pb-20 lg:pb-8',
+          isAIAssistantRoute ? 'px-0' : 'px-4 md:px-6 lg:px-8',
           collapsed ? 'lg:ml-[var(--sidebar-collapsed)]' : 'lg:ml-[var(--sidebar-width)]'
         )}
       >
-        <div className="max-w-7xl mx-auto py-6">
+        <div
+          className={cn(
+            isAIAssistantRoute
+              ? 'max-w-none mx-0 py-0 h-[calc(100vh-var(--header-height))]'
+              : 'max-w-7xl mx-auto py-6'
+          )}
+        >
           {children}
         </div>
       </main>

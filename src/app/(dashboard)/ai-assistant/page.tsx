@@ -36,12 +36,13 @@ const ConversationList = dynamic(
 export default function AIAssistantPage() {
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [modelNotice, setModelNotice] = useState<string | null>(null);
 
   const {
     messages,
     setMessages,
     input,
-    setInput,
     handleInputChange,
     handleSubmit,
     isLoading,
@@ -52,8 +53,36 @@ export default function AIAssistantPage() {
       conversationId,
       materialIds: selectedMaterials,
     },
+    async onResponse(response) {
+      if (!response.ok) {
+        try {
+          const data = await response.clone().json();
+          setChatError(
+            data?.error ||
+              data?.details ||
+              "AI assistant is unavailable right now. Please try again.",
+          );
+        } catch {
+          setChatError("AI assistant is unavailable right now. Please try again.");
+        }
+        return;
+      }
+
+      const responseConversationId = response.headers.get("x-conversation-id");
+      if (!conversationId && responseConversationId) {
+        setConversationId(responseConversationId);
+      }
+
+      const usedFallback = response.headers.get("x-ai-model-fallback") === "true";
+      if (usedFallback) {
+        setModelNotice("Primary Gemini model unavailable. Using fallback model.");
+      } else {
+        setModelNotice(null);
+      }
+    },
     onError(error) {
       console.error("Chat error:", error);
+      setChatError(error.message || "Failed to get response from AI assistant.");
     },
   });
 
@@ -91,9 +120,9 @@ export default function AIAssistantPage() {
   }, [conversationId, setMessages]);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-full bg-background">
       {/* Sidebar */}
-      <aside className="w-64 border-r p-4 hidden md:block">
+      <aside className="hidden md:block w-[320px] border-r border-border bg-card">
         <ConversationList
           onSelectConversation={setConversationId}
           currentConversationId={conversationId}
@@ -101,22 +130,35 @@ export default function AIAssistantPage() {
       </aside>
 
       {/* Chat Area */}
-      <main className="flex-1 flex flex-col p-4">
-        <ChatInterface
-          messages={messages}
-          input={input}
-          onInputChange={handleInputChange}
-          onSubmit={(e) => {
-            e.preventDefault();
+      <main className="flex-1 min-w-0 flex flex-col p-4 md:p-5">
+        {chatError && (
+          <div className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+            {chatError}
+          </div>
+        )}
+        {modelNotice && (
+          <div className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
+            {modelNotice}
+          </div>
+        )}
+        <div className="flex-1 min-h-0">
+          <ChatInterface
+            messages={messages}
+            input={input}
+            onInputChange={handleInputChange}
+            onSubmit={(e) => {
+              e.preventDefault();
 
-            if (!input.trim()) return;
+              if (!input.trim()) return;
 
-            handleSubmit(e);
-          }}
-          isLoading={isLoading}
-          selectedMaterials={selectedMaterials}
-          onSelectMaterials={setSelectedMaterials}
-        />
+              setChatError(null);
+              handleSubmit(e);
+            }}
+            isLoading={isLoading}
+            selectedMaterials={selectedMaterials}
+            onSelectMaterials={setSelectedMaterials}
+          />
+        </div>
       </main>
     </div>
   );

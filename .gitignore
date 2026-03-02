@@ -22,6 +22,11 @@ yarn-error.log*
 # env files
 .env
 .env*.local
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+!.env.example
 
 # vercel
 .vercel
@@ -36,3 +41,7 @@ public/uploads/
 # IDE
 .vscode/
 .idea/
+
+# AI Agent
+.agents/
+.gemini/

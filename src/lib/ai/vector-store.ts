@@ -1,5 +1,6 @@
 import { prisma } from '../prisma';
 import crypto from 'crypto';
+import { Prisma } from '@prisma/client';
 
 export async function storeChunkEmbeddings(
   materialId: string,
@@ -35,9 +36,13 @@ export async function searchSimilarChunks(
   matchThreshold: number = 0.7,
   matchCount: number = 5
 ) {
+  if (!materialIds.length) {
+    return [];
+  }
+
   const embeddingString = `[${queryEmbedding.join(',')}]`;
-  
-  const data = await prisma.$queryRaw`
+
+  const strictMatches = await prisma.$queryRaw`
     SELECT 
       "id",
       "materialId" as "material_id",
@@ -46,13 +51,31 @@ export async function searchSimilarChunks(
       1 - ("embedding" <=> ${embeddingString}::vector) as similarity
     FROM "material_chunks"
     WHERE 
-      "materialId" = ANY(${materialIds})
+      "materialId" IN (${Prisma.join(materialIds)})
       AND 1 - ("embedding" <=> ${embeddingString}::vector) > ${matchThreshold}
     ORDER BY "embedding" <=> ${embeddingString}::vector
     LIMIT ${matchCount};
   `;
-  
-  return data;
+
+  if (Array.isArray(strictMatches) && strictMatches.length > 0) {
+    return strictMatches;
+  }
+
+  // Fallback: always retrieve closest chunks so selected context is actually used.
+  const fallbackMatches = await prisma.$queryRaw`
+    SELECT 
+      "id",
+      "materialId" as "material_id",
+      "chunk_text",
+      "metadata",
+      1 - ("embedding" <=> ${embeddingString}::vector) as similarity
+    FROM "material_chunks"
+    WHERE "materialId" IN (${Prisma.join(materialIds)})
+    ORDER BY "embedding" <=> ${embeddingString}::vector
+    LIMIT ${matchCount};
+  `;
+
+  return fallbackMatches;
 }
 
 export async function deleteChunksByMaterialId(materialId: string) {
