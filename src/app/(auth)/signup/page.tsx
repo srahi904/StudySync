@@ -1,8 +1,5 @@
 // src/app/(auth)/signup/page.tsx
 import type { Metadata } from 'next'
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
 import { SignupForm } from '@/components/auth/signup-form'
 
 export const metadata: Metadata = {
@@ -10,10 +7,8 @@ export const metadata: Metadata = {
   description: 'Sign up for StudySync AI — free forever.',
 }
 
-export default async function SignupPage() {
-  const session = await getServerSession(authOptions)
-  if (session) redirect('/dashboard')
-
+export default function SignupPage() {
+  // Auth redirect handled by middleware — no server-side session check needed
   return (
     <>
       <h1 className="font-display font-extrabold text-2xl mb-1">Create your account</h1>

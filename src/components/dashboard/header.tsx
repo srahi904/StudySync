@@ -20,6 +20,7 @@ const BREADCRUMB_MAP: Record<string, string> = {
   '/materials': 'Materials',
   '/ai-assistant': 'AI Assistant',
   '/chat': 'Chat',
+  '/explore': 'Explore',
   '/groups': 'Groups',
   '/matching': 'Matching',
   '/quizzes': 'Quizzes',
@@ -46,7 +47,6 @@ export function Header({ collapsed, onMenuClick }: HeaderProps) {
         collapsed ? 'lg:ml-[var(--sidebar-collapsed)]' : 'lg:ml-[var(--sidebar-width)]'
       )}
     >
-      {/* Mobile hamburger */}
       <button
         onClick={onMenuClick}
         className="lg:hidden text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors"
@@ -54,23 +54,18 @@ export function Header({ collapsed, onMenuClick }: HeaderProps) {
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* Breadcrumb */}
       <div className="flex-1">
         <h2 className="text-base font-semibold capitalize">{breadcrumb}</h2>
       </div>
 
-      {/* Right side */}
       <div className="flex items-center gap-2">
-        {/* Global Search */}
         <GlobalSearch />
 
-        {/* Notifications */}
         <button className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors relative">
           <Bell className="w-4.5 h-4.5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
         </button>
 
-        {/* User menu */}
         <UserMenu />
       </div>
     </header>

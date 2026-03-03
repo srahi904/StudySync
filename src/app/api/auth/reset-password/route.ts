@@ -1,7 +1,7 @@
 // src/app/api/auth/reset-password/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 import { ResetPasswordSchema } from '@/lib/validations'
 import { TokenType } from '@prisma/client'
 

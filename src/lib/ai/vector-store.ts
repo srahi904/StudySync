@@ -1,4 +1,4 @@
-import { prisma } from '../prisma';
+import { prisma } from '../db';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 

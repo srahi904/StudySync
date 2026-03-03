@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { streamText } from "ai";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 import { AI_CONFIG, googleAI } from "@/lib/ai/gemini";
 import { generateEmbedding } from "@/lib/ai/embeddings";
 import { searchSimilarChunks } from "@/lib/ai/vector-store";

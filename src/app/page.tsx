@@ -7,6 +7,9 @@ import { Testimonials } from '@/components/landing/testimonials'
 import { CtaSection } from '@/components/landing/cta-section'
 import { Footer } from '@/components/landing/footer'
 
+export const dynamic = 'force-static'
+export const revalidate = 3600 // Revalidate every hour
+
 export default function LandingPage() {
   return (
     <main>

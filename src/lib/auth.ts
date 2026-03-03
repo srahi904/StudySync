@@ -5,14 +5,15 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import GitHubProvider from 'next-auth/providers/github'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
 
   session: {
     strategy: 'jwt',
-    maxAge: 7 * 24 * 60 * 60, // 7 days
+    maxAge: 30 * 24 * 60 * 60, // 30 days (was 7)
+    updateAge: 24 * 60 * 60, // Refresh token once per day
   },
 
   pages: {
@@ -34,8 +35,21 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email and password are required')
         }
 
+        // Optimized: select only needed fields
         const user = await prisma.user.findUnique({
           where: { email: credentials.email.toLowerCase() },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            password: true,
+            role: true,
+            emailVerified: true,
+            onboarded: true,
+            avatar: true,
+            profileCompleted: true,
+          },
         })
 
         if (!user || !user.password) {
@@ -47,23 +61,14 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Incorrect password')
         }
 
-        // Update last active
-        await prisma.user.update({
+        // Update last active (fire-and-forget, don't block login)
+        prisma.user.update({
           where: { id: user.id },
           data: { lastActiveAt: new Date() },
-        })
+        }).catch(() => {})
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          role: user.role,
-          emailVerified: user.emailVerified,
-          onboarded: user.onboarded,
-          avatar: user.avatar,
-          profileCompleted: user.profileCompleted,
-        }
+        const { password, ...userWithoutPassword } = user
+        return userWithoutPassword
       },
     }),
 
@@ -133,6 +138,13 @@ export const authOptions: NextAuthOptions = {
       }
 
       return true
+    },
+
+    // ─── Fast redirect (no extra checks) ──────────────────
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      if (new URL(url).origin === baseUrl) return url
+      return baseUrl + '/dashboard'
     },
   },
 }

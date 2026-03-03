@@ -60,7 +60,7 @@ export function MessageList({
                       <li key={i}>
                         Segment {i + 1}
                         {typeof source.similarity === 'number'
-                          ? ` · ${(source.similarity * 100).toFixed(1)}% match`
+                          ? ` - ${(source.similarity * 100).toFixed(1)}% match`
                           : ''}
                       </li>
                     ))}

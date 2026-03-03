@@ -4,6 +4,8 @@ import { Syne, DM_Sans, DM_Mono } from 'next/font/google'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { AuthSessionProvider } from '@/components/providers/session-provider'
 import { Toaster } from '@/components/ui/toaster'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 
 const syne = Syne({ subsets: ['latin'], variable: '--font-syne', weight: ['400', '600', '700', '800'] })
@@ -33,6 +35,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Toaster />
           </ThemeProvider>
         </AuthSessionProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

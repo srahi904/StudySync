@@ -7,6 +7,8 @@ import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
+import { PublicChatPanel } from '@/components/chat/public-chat-panel'
+import { ActiveStatusProvider } from '@/components/chat/active-status-provider'
 import { cn } from '@/lib/utils'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -15,6 +17,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { data: session, status } = useSession()
   const pathname = usePathname()
   const isAIAssistantRoute = pathname === '/ai-assistant' || pathname.startsWith('/ai-assistant/')
+  const isChatRoute = pathname === '/chat' || pathname.startsWith('/chat/') || pathname === '/public-chat'
+  const isFullHeightRoute = isAIAssistantRoute || isChatRoute
 
   if (status === 'loading') {
     return (
@@ -47,15 +51,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <main
         className={cn(
-          'transition-all duration-300 pt-0 pb-20 lg:pb-8',
-          isAIAssistantRoute ? 'px-0' : 'px-4 md:px-6 lg:px-8',
+          'transition-all duration-300 pt-0',
+          isFullHeightRoute ? 'px-0 pb-0' : 'px-4 md:px-6 lg:px-8 pb-20 lg:pb-8',
           collapsed ? 'lg:ml-[var(--sidebar-collapsed)]' : 'lg:ml-[var(--sidebar-width)]'
         )}
       >
         <div
           className={cn(
-            isAIAssistantRoute
-              ? 'max-w-none mx-0 py-0 h-[calc(100vh-var(--header-height))]'
+            'w-full',
+            isFullHeightRoute
+              ? 'h-[calc(100vh-var(--header-height))] p-0'
               : 'max-w-7xl mx-auto py-6'
           )}
         >
@@ -63,7 +68,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </main>
 
+      {/* Public Chat Panel - visible across all dashboard pages */}
+      {!isChatRoute && <PublicChatPanel />}
+
       <MobileNav />
+      <ActiveStatusProvider />
     </div>
   )
 }

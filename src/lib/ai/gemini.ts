@@ -4,11 +4,6 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
-console.log(
-  "[Gemini Config] API key configured:",
-  apiKey ? "yes" : "no",
-);
-
 if (!apiKey) {
   throw new Error(
     "Missing GOOGLE_GENERATIVE_AI_API_KEY. Set it in your server environment.",

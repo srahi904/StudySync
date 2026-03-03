@@ -1,7 +1,7 @@
 // src/app/api/auth/signup/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 import { SignupSchema } from '@/lib/validations'
 import { generateOTP, addMinutes } from '@/lib/utils'
 import { sendVerificationEmail } from '@/lib/email'

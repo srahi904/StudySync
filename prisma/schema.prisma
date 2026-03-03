@@ -1,13 +1,18 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
+  previewFeatures = ["postgresqlExtensions", "driverAdapters"]
 }
 
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
   extensions = [vector]
 }
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
 
 model User {
   id                 String          @id @default(cuid())
@@ -40,17 +45,37 @@ model User {
   subjects           String[]        @default([])
   twitterUrl         String?
   websiteUrl         String?
+  
+  // AI Usage Tracking
+  aiTokensUsed       Int             @default(0)
+  aiTokensLimit      Int             @default(100000)
+
+  // Social Features
+  followersCount     Int             @default(0)
+  followingCount     Int             @default(0)
+  isOnline           Boolean         @default(false)
+  lastSeenAt         DateTime        @default(now())
+
+  // Relations
   accounts           Account[]
+  sessions           Session[]
+  materials          Material[]      @relation("UserMaterials")
   materialsSharedBy  MaterialShare[] @relation("SharedByUser")
   sharedMaterials    MaterialShare[] @relation("SharedMaterials")
-  materials          Material[]      @relation("UserMaterials")
-  sessions           Session[]
   aiConversations    AiConversation[] @relation("UserConversations")
-  aiTokensUsed       Int              @default(0)
-  aiTokensLimit      Int              @default(100000)
+
+  // Social Relations
+  followers              Follow[]              @relation("Following")
+  following              Follow[]              @relation("Follower")
+  publicMessages         PublicMessage[]        @relation("PublicMessages")
+  privateConversations1  PrivateConversation[] @relation("PrivateUser1")
+  privateConversations2  PrivateConversation[] @relation("PrivateUser2")
+  privateMessages        PrivateMessage[]      @relation("PrivateMessages")
+  posts                  Post[]                @relation("Posts")
 
   @@index([email])
   @@index([role])
+  @@index([lastActiveAt])
   @@map("users")
 }
 
@@ -60,13 +85,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   session_state     String?
+  
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
@@ -79,9 +105,11 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([expires])
   @@map("sessions")
 }
 
@@ -94,40 +122,55 @@ model VerificationToken {
   createdAt  DateTime  @default(now())
 
   @@unique([identifier, token])
+  @@index([expires])
   @@map("verification_tokens")
 }
 
+// ============================================
+// MATERIALS & CONTENT
+// ============================================
+
 model Material {
-  id            String             @id @default(cuid())
-  title         String
-  description   String?
-  type          MaterialType
-  fileUrl       String
-  fileName      String
-  fileSize      Int
-  mimeType      String
-  userId        String
-  subject       String?
-  tags          String[]           @default([])
-  status        MaterialStatus     @default(PENDING)
-  embeddings    Json?
-  isProcessed   Boolean            @default(false)
-  processedAt   DateTime?
-  chunkCount    Int?
-  processingStatus ProcessingStatus @default(PENDING)
-  processingError String?
-  viewCount     Int                @default(0)
-  downloadCount Int                @default(0)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  visibility    MaterialVisibility @default(PRIVATE)
-  sharedWith    MaterialShare[]    @relation("MaterialShares")
-  user          User               @relation("UserMaterials", fields: [userId], references: [id], onDelete: Cascade)
+  id               String             @id @default(cuid())
+  title            String
+  description      String?            @db.Text
+  type             MaterialType
+  fileUrl          String
+  fileName         String
+  fileSize         Int
+  mimeType         String
+  userId           String
+  subject          String?
+  tags             String[]           @default([])
+  status           MaterialStatus     @default(PENDING)
+  visibility       MaterialVisibility @default(PRIVATE)
+  
+  // Processing
+  isProcessed      Boolean            @default(false)
+  processedAt      DateTime?
+  processingStatus ProcessingStatus   @default(PENDING)
+  processingError  String?            @db.Text
+  chunkCount       Int?
+  embeddings       Json?
+  
+  // Stats
+  viewCount        Int                @default(0)
+  downloadCount    Int                @default(0)
+  
+  // Timestamps
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  // Relations
+  user             User               @relation("UserMaterials", fields: [userId], references: [id], onDelete: Cascade)
+  sharedWith       MaterialShare[]    @relation("MaterialShares")
+  chunks           MaterialChunk[]    @relation("MaterialChunks")
 
   @@index([userId])
   @@index([subject])
   @@index([status])
   @@index([visibility])
+  @@index([processingStatus])
   @@index([createdAt])
   @@map("materials")
 }
@@ -141,6 +184,8 @@ model MaterialShare {
   canEdit          Boolean   @default(false)
   createdAt        DateTime  @default(now())
   expiresAt        DateTime?
+  
+  // Relations
   material         Material  @relation("MaterialShares", fields: [materialId], references: [id], onDelete: Cascade)
   sharedBy         User      @relation("SharedByUser", fields: [sharedByUserId], references: [id], onDelete: Cascade)
   sharedWithUser   User      @relation("SharedMaterials", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
@@ -148,14 +193,74 @@ model MaterialShare {
   @@unique([materialId, sharedWithUserId])
   @@index([sharedWithUserId])
   @@index([materialId])
+  @@index([sharedByUserId])
   @@map("material_shares")
 }
 
-enum MaterialVisibility {
-  PUBLIC
-  PRIVATE
-  GROUP_ONLY
+model MaterialChunk {
+  id          String   @id @default(cuid())
+  materialId  String
+  chunkText   String   @map("chunk_text") @db.Text
+  chunkIndex  Int      @map("chunk_index")
+  embedding   Unsupported("vector(3072)")  // Gemini embedding-001 dimension
+  metadata    Json?    @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  material    Material @relation("MaterialChunks", fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([materialId], map: "material_chunks_material_id_idx")
+  @@index([chunkIndex])
+  @@map("material_chunks")
 }
+
+// ============================================
+// AI CONVERSATIONS
+// ============================================
+
+model AiConversation {
+  id            String      @id @default(cuid())
+  title         String      @default("New Conversation")
+  userId        String
+  materialIds   String[]    @default([])
+  model         String      @default("gemini-pro")
+  temperature   Float       @default(0.7)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  lastMessageAt DateTime?
+  
+  // Relations
+  user          User        @relation("UserConversations", fields: [userId], references: [id], onDelete: Cascade)
+  messages      AiMessage[]
+
+  @@index([userId])
+  @@index([lastMessageAt])
+  @@index([createdAt])
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id               String         @id @default(cuid())
+  conversationId   String
+  role             AiMessageRole
+  content          String         @db.Text
+  sources          Json?
+  promptTokens     Int?
+  completionTokens Int?
+  totalTokens      Int?
+  createdAt        DateTime       @default(now())
+  
+  // Relations
+  conversation     AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("ai_messages")
+}
+
+// ============================================
+// ENUMS
+// ============================================
 
 enum UserRole {
   USER
@@ -203,57 +308,143 @@ enum ProcessingStatus {
   FAILED
 }
 
+enum MaterialVisibility {
+  PUBLIC
+  PRIVATE
+  GROUP_ONLY
+}
+
 enum AiMessageRole {
   USER
   ASSISTANT
   SYSTEM
 }
 
-model AiConversation {
-  id            String      @id @default(cuid())
-  title         String      @default("New Conversation")
-  userId        String
-  user          User        @relation("UserConversations", fields: [userId], references: [id], onDelete: Cascade)
-  materialIds   String[]    @default([])
-  model         String      @default("gpt-4-turbo-preview")
-  temperature   Float       @default(0.7)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  lastMessageAt DateTime?
-  messages      AiMessage[]
-  
-  @@index([userId])
+// ============================================
+// SOCIAL FEATURES (Week 6)
+// ============================================
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// ============================================
+// PUBLIC CHAT (Discord-style)
+// ============================================
+
+model PublicChannel {
+  id          String          @id @default(cuid())
+  name        String
+  topic       String?         @db.Text
+  subject     String?
+  isActive    Boolean         @default(true)
+  messages    PublicMessage[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([subject])
+  @@index([isActive])
+  @@map("public_channels")
+}
+
+model PublicMessage {
+  id          String        @id @default(cuid())
+  channelId   String
+  channel     PublicChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User          @relation("PublicMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  content     String        @db.Text
+  attachments Json?
+  isDeleted   Boolean       @default(false)
+  deletedAt   DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([channelId, createdAt])
+  @@index([senderId])
+  @@index([expiresAt])
+  @@map("public_messages")
+}
+
+// ============================================
+// PRIVATE CHAT (Instagram-style)
+// ============================================
+
+model PrivateConversation {
+  id               String           @id @default(cuid())
+  user1Id          String
+  user2Id          String
+  user1            User             @relation("PrivateUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2            User             @relation("PrivateUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  messages         PrivateMessage[]
+  lastMessageAt    DateTime?
+  lastMessageText  String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
   @@index([lastMessageAt])
-  @@map("ai_conversations")
+  @@map("private_conversations")
 }
 
-model AiMessage {
-  id               String         @id @default(cuid())
-  conversationId   String
-  conversation     AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  role             AiMessageRole
-  content          String         @db.Text
-  sources          Json?
-  promptTokens     Int?
-  completionTokens Int?
-  totalTokens      Int?
-  createdAt        DateTime       @default(now())
-  
-  @@index([conversationId])
+model PrivateMessage {
+  id             String              @id @default(cuid())
+  conversationId String
+  conversation   PrivateConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User                @relation("PrivateMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  content        String              @db.Text
+  attachments    Json?
+  status         MessageStatus       @default(SENT)
+  isRead         Boolean             @default(false)
+  readAt         DateTime?
+  isDeleted      Boolean             @default(false)
+  deletedAt      DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("private_messages")
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+// ============================================
+// EXPLORER FEED
+// ============================================
+
+model Post {
+  id          String   @id @default(cuid())
+  authorId    String
+  author      User     @relation("Posts", fields: [authorId], references: [id], onDelete: Cascade)
+  caption     String?  @db.Text
+  images      Json?
+  materialId  String?
+  likesCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([authorId])
   @@index([createdAt])
-  @@map("ai_messages")
-}
-
-
-model MaterialChunk {
-  id          String    @id @default(cuid())
-  materialId  String
-  chunkText   String    @map("chunk_text") @db.Text
-  chunkIndex  Int       @map("chunk_index")
-  embedding   Unsupported("vector(3072)")   // ← matches gemini-embedding-001
-  metadata    Json?     @default("{}")
-  createdAt   DateTime  @default(now()) @map("created_at")
-
-  @@index([materialId], map: "material_chunks_material_id_idx")
-  @@map("material_chunks")
+  @@map("posts")
 }

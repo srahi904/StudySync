@@ -1,6 +1,6 @@
 // src/app/api/auth/verify-email/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 import { VerifyEmailSchema } from '@/lib/validations'
 import { generateOTP, addMinutes } from '@/lib/utils'
 import { sendVerificationEmail } from '@/lib/email'

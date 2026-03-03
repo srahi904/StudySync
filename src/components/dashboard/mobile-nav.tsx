@@ -2,13 +2,13 @@
 // src/components/dashboard/mobile-nav.tsx
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, MessageSquare, Plus, Bell, Menu } from 'lucide-react'
+import { Home, MessageSquare, Compass, Bell, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const MOBILE_ITEMS = [
   { label: 'Home', icon: Home, href: '/dashboard' },
-  { label: 'Chat', icon: MessageSquare, href: '/chat', disabled: true },
-  { label: 'Add', icon: Plus, href: '#', isAction: true },
+  { label: 'Chat', icon: MessageSquare, href: '/chat' },
+  { label: 'Explore', icon: Compass, href: '/explore' },
   { label: 'Alerts', icon: Bell, href: '#', disabled: true },
   { label: 'More', icon: Menu, href: '/settings' },
 ]
@@ -22,17 +22,6 @@ export function MobileNav() {
         {MOBILE_ITEMS.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-
-          if (item.isAction) {
-            return (
-              <button
-                key={item.label}
-                className="flex flex-col items-center justify-center w-12 h-12 -mt-4 rounded-full gradient-bg text-white shadow-lg shadow-primary/25"
-              >
-                <Icon className="w-5 h-5" />
-              </button>
-            )
-          }
 
           if (item.disabled) {
             return (
