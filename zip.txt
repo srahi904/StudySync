@@ -1,5 +1,0 @@
-add the notification in whole project chat bubble and notification bar and also with real time notification when ever follow and someone who followed you and post a new post or comment on your post or like your post or share your post or when ever invite notification of group chat show in notification bar and also in chat bubble and a feature suggest for group when someone match profile approx 90 % then also send a notification to the user that this person matched with your profile want to follow or not  and also same for group chat if someone has same profile then also send a notification to the user that this person matched with your profile want to join group or not and each grp have a grp leader which wpprove the join request of group  and now make responsive design of project with proper ui and also make a feature that when someone and whole project is optimised and cached for fast loading and 
-
-tomorrow 
-profile update 
-username input from starting and from profile edit username after 1 time updating will allowed after 1 month 
