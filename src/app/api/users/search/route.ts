@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       AND: [
         { id: { not: session.user.id } },
         { emailVerified: { not: null } },
+        { isActive: true },
         {
           OR: [
             { name: { contains: q, mode: 'insensitive' as const } },

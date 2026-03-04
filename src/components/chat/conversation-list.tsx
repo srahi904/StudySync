@@ -172,7 +172,7 @@ export function ConversationList({ selectedId, onSelect, onNewChat }: Conversati
                     )}
                   </div>
                   <OnlineIndicator
-                    isOnline={activeUsers.has(conv.otherUser.id) || conv.otherUser.isOnline || false}
+                    isOnline={activeUsers.has(conv.otherUser.id)}
                     size="sm"
                     className="absolute -bottom-0.5 -right-0.5"
                   />

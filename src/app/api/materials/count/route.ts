@@ -4,25 +4,32 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
+import { cache } from '@/lib/redis'
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    const cacheKey = `user:${session.user.id}:materials:count`
+    
+    const data = await cache.get(cacheKey, async () => {
+      const oneWeekAgo = new Date()
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
-    const [total, thisWeek] = await Promise.all([
-      prisma.material.count({ where: { userId: session.user.id } }),
-      prisma.material.count({
-        where: {
-          userId: session.user.id,
-          createdAt: { gte: oneWeekAgo }
-        }
-      })
-    ])
+      const [total, thisWeek] = await Promise.all([
+        prisma.material.count({ where: { userId: session.user.id } }),
+        prisma.material.count({
+          where: {
+            userId: session.user.id,
+            createdAt: { gte: oneWeekAgo }
+          }
+        })
+      ])
+      return { total, thisWeek }
+    }, 3600)
 
-    return NextResponse.json({ success: true, data: { total, thisWeek } })
+    return NextResponse.json({ success: true, data })
   } catch (err) {
     console.error('[GET /api/materials/count]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

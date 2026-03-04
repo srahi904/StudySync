@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { cache } from '@/lib/redis'
 import { getMaterialTypeFromMime } from '@/lib/materials/material-utils'
 import { z } from 'zod'
 
@@ -170,6 +171,9 @@ export async function POST(req: NextRequest) {
         user: { select: { id: true, name: true, avatar: true, image: true } }
       }
     })
+
+    // Invalidate dashboard count cache
+    await cache.del(`user:${userId}:materials:count`)
 
     return NextResponse.json({
       success: true,

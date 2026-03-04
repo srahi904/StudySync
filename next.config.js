@@ -7,6 +7,13 @@ const nextConfig = {
   turbopack: {},
   experimental: {
     serverActions: { allowedOrigins: ['localhost:3000'] },
+    optimizePackageImports: [
+      'lucide-react', 
+      'date-fns', 
+      '@radix-ui/react-icons', 
+      '@radix-ui/react-avatar', 
+      '@radix-ui/react-dialog'
+    ],
   },
 
   // ═══ COMPILER OPTIMIZATIONS ═══
@@ -38,6 +45,8 @@ const nextConfig = {
     // Canvas alias for pdf-parse
     config.resolve.alias.canvas = false;
 
+    // Only apply manual chunking in PRODUCTION build.
+    // Applying this in DEV disables Turbopack!
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',
@@ -74,12 +83,8 @@ const nextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
         ],
       },
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=120' },
-        ],
-      },
+      // Note: Removed global /api caching to prevent stale auth/upload state. 
+      // Targeted caching is handled via Redis.
     ];
   },
 };

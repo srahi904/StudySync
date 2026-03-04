@@ -1,10 +1,12 @@
 // src/hooks/use-pusher.ts
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { getPusherClient } from '@/lib/pusher/client';
-import type PusherClient from 'pusher-js';
 import type { Channel } from 'pusher-js';
+
+// Global reference counter for Pusher channels across the app
+const channelRefs: Record<string, number> = {};
 
 interface UsePusherOptions {
   channelName: string;
@@ -14,7 +16,7 @@ interface UsePusherOptions {
 }
 
 export function usePusher({ channelName, eventName, onEvent, enabled = true }: UsePusherOptions) {
-  const channelRef = useRef<Channel | null>(null);
+  const channelInstance = useRef<Channel | null>(null);
   const callbackRef = useRef(onEvent);
   callbackRef.current = onEvent;
 
@@ -23,20 +25,32 @@ export function usePusher({ channelName, eventName, onEvent, enabled = true }: U
 
     const pusher = getPusherClient();
     const channel = pusher.subscribe(channelName);
-    channelRef.current = channel;
+    channelInstance.current = channel;
 
-    channel.bind(eventName, (data: unknown) => {
+    // Increment reference count
+    channelRefs[channelName] = (channelRefs[channelName] || 0) + 1;
+
+    // Create a stable handler reference to properly unbind ONLY this specific listener later
+    const handler = (data: unknown) => {
       callbackRef.current(data);
-    });
+    };
+    channel.bind(eventName, handler);
 
     return () => {
-      channel.unbind(eventName);
-      pusher.unsubscribe(channelName);
-      channelRef.current = null;
+      // Unbind only this specific component's listener
+      channel.unbind(eventName, handler);
+      
+      // Decrement reference count and unsubscribe if 0 components are using it
+      channelRefs[channelName] -= 1;
+      if (channelRefs[channelName] <= 0) {
+        pusher.unsubscribe(channelName);
+        delete channelRefs[channelName];
+      }
+      channelInstance.current = null;
     };
   }, [channelName, eventName, enabled]);
 
-  return { channel: channelRef.current };
+  return { channel: channelInstance.current };
 }
 
 // Multi-event subscription
@@ -47,7 +61,7 @@ interface UsePusherMultiOptions {
 }
 
 export function usePusherMulti({ channelName, events, enabled = true }: UsePusherMultiOptions) {
-  const channelRef = useRef<Channel | null>(null);
+  const channelInstance = useRef<Channel | null>(null);
   const eventsRef = useRef(events);
   eventsRef.current = events;
 
@@ -56,23 +70,41 @@ export function usePusherMulti({ channelName, events, enabled = true }: UsePushe
 
     const pusher = getPusherClient();
     const channel = pusher.subscribe(channelName);
-    channelRef.current = channel;
+    channelInstance.current = channel;
+
+    // Increment reference count
+    channelRefs[channelName] = (channelRefs[channelName] || 0) + 1;
 
     const eventNames = Object.keys(eventsRef.current);
+    
+    // Create stable handler references mapped by event name
+    const handlers: Record<string, (data: unknown) => void> = {};
+    
     eventNames.forEach((eventName) => {
-      channel.bind(eventName, (data: unknown) => {
+      const handler = (data: unknown) => {
         eventsRef.current[eventName]?.(data);
-      });
+      };
+      handlers[eventName] = handler;
+      channel.bind(eventName, handler);
     });
 
     return () => {
+      // Unbind only this specific component's listeners
       eventNames.forEach((eventName) => {
-        channel.unbind(eventName);
+        if (handlers[eventName]) {
+          channel.unbind(eventName, handlers[eventName]);
+        }
       });
-      pusher.unsubscribe(channelName);
-      channelRef.current = null;
+      
+      // Decrement reference count and unsubscribe if 0 components are using it
+      channelRefs[channelName] -= 1;
+      if (channelRefs[channelName] <= 0) {
+        pusher.unsubscribe(channelName);
+        delete channelRefs[channelName];
+      }
+      channelInstance.current = null;
     };
   }, [channelName, enabled]);
 
-  return { channel: channelRef.current };
+  return { channel: channelInstance.current };
 }

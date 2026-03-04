@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const limit = parseLimit(request);
 
     const conversations = await prisma.aiConversation.findMany({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id, isArchived: false },
       orderBy: [
         { lastMessageAt: 'desc' },
         { createdAt: 'desc' },

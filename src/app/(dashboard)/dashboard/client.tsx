@@ -39,6 +39,13 @@ export function DashboardClient({ user }: DashboardClientProps) {
       .then(r => r.json())
       .then(d => { if (d.success) setRecentMaterials(d.data.materials) })
       .catch(() => {})
+
+    // Background AI Profile Match Check (delayed so it doesn't block load)
+    const matchTimer = setTimeout(() => {
+      fetch('/api/ai/match', { method: 'POST' }).catch(() => {})
+    }, 5000)
+
+    return () => clearTimeout(matchTimer)
   }, [])
 
   return (

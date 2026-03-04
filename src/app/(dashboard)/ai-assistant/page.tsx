@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useChat } from "@ai-sdk/react";
+
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 
@@ -38,33 +38,42 @@ export default function AIAssistantPage() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [chatError, setChatError] = useState<string | null>(null);
   const [modelNotice, setModelNotice] = useState<string | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const {
-    messages,
-    setMessages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-  } = useChat({
-    api: "/api/ai/chat",
-    streamProtocol: "text",
-    body: {
-      conversationId,
-      materialIds: selectedMaterials,
-    },
-    async onResponse(response) {
+  const sendMessage = async (content: string) => {
+    if (!content.trim() || isLoading) return;
+
+    setIsLoading(true);
+    setChatError(null);
+    setInput("");
+
+    const newMessages = [...messages, { id: Date.now().toString(), role: "user", content }];
+    setMessages(newMessages);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: content,
+          messages: newMessages,
+          conversationId,
+          materialIds: selectedMaterials,
+        }),
+      });
+
       if (!response.ok) {
         try {
-          const data = await response.clone().json();
+          const data = await response.json();
           setChatError(
-            data?.error ||
-              data?.details ||
-              "AI assistant is unavailable right now. Please try again.",
+            data?.error || data?.details || "AI assistant is unavailable right now. Please try again."
           );
         } catch {
           setChatError("AI assistant is unavailable right now. Please try again.");
         }
+        setIsLoading(false);
         return;
       }
 
@@ -74,17 +83,42 @@ export default function AIAssistantPage() {
       }
 
       const usedFallback = response.headers.get("x-ai-model-fallback") === "true";
-      if (usedFallback) {
-        setModelNotice("Primary Gemini model unavailable. Using fallback model.");
-      } else {
-        setModelNotice(null);
+      setModelNotice(usedFallback ? "Primary Gemini model unavailable. Using fallback model." : null);
+
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantMessage = "";
+      const assistantMessageId = Date.now().toString() + "-ai";
+
+      setMessages((prev) => [
+        ...prev,
+        { id: assistantMessageId, role: "assistant", content: "" },
+      ]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const text = decoder.decode(value, { stream: true });
+        assistantMessage += text;
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? { ...msg, content: assistantMessage }
+              : msg
+          )
+        );
       }
-    },
-    onError(error) {
+    } catch (error: any) {
       console.error("Chat error:", error);
       setChatError(error.message || "Failed to get response from AI assistant.");
-    },
-  });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Load existing conversation when ID changes
   useEffect(() => {
@@ -145,14 +179,14 @@ export default function AIAssistantPage() {
           <ChatInterface
             messages={messages}
             input={input}
-            onInputChange={handleInputChange}
+            onInputChange={(e: any) => setInput(e.target.value)}
             onSubmit={(e) => {
               e.preventDefault();
 
-              if (!input.trim()) return;
+              if (!input.trim() || isLoading) return;
 
               setChatError(null);
-              handleSubmit(e);
+              sendMessage(input);
             }}
             isLoading={isLoading}
             selectedMaterials={selectedMaterials}

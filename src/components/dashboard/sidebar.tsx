@@ -1,6 +1,6 @@
 'use client'
 // src/components/dashboard/sidebar.tsx
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -11,6 +11,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/lib/utils'
+import { usePusherMulti } from '@/hooks/use-pusher'
+import { CHANNELS, EVENTS } from '@/lib/pusher/channels'
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: Home, href: '/dashboard' },
@@ -19,7 +21,8 @@ const NAV_ITEMS = [
   { label: 'AI Assistant', icon: Bot, href: '/ai-assistant' },
   { label: 'Chat', icon: MessageSquare, href: '/chat' },
   { label: 'Explore', icon: Compass, href: '/explore' },
-  { label: 'Groups', icon: Users, href: '/groups', disabled: true },
+  { label: 'Groups', icon: Users, href: '/groups' },
+
   { label: 'Matching', icon: Heart, href: '/matching', disabled: true },
   { label: 'Quizzes', icon: Award, href: '/quizzes', disabled: true },
   { label: 'Analytics', icon: BarChart3, href: '/analytics', disabled: true },
@@ -40,6 +43,35 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   const pathname = usePathname()
   const { data: session } = useSession()
   const user = session?.user
+
+  const [unreadChatCount, setUnreadChatCount] = useState(0)
+
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const res = await fetch('/api/chat/private/unread-count')
+      const data = await res.json()
+      setUnreadChatCount(data.unreadCount || 0)
+    } catch (err) {}
+  }, [])
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchUnreadCount()
+    }
+  }, [session?.user?.id, fetchUnreadCount])
+
+  usePusherMulti({
+    channelName: session?.user?.id ? CHANNELS.user(session.user.id) : '',
+    events: {
+      [EVENTS.CONVERSATION_UPDATED]: () => {
+        fetchUnreadCount()
+      },
+      [EVENTS.MESSAGE_READ]: () => {
+        fetchUnreadCount()
+      }
+    },
+    enabled: !!session?.user?.id
+  })
 
   return (
     <>
@@ -96,13 +128,29 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                 href={item.href}
                 onClick={onMobileClose}
                 className={cn(
-                  'sidebar-item',
+                  'sidebar-item relative',
                   isActive ? 'sidebar-item-active' : 'sidebar-item-inactive',
                   collapsed && 'justify-center px-0'
                 )}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
+                <div className="relative flex-shrink-0">
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  {item.href === '/chat' && collapsed && unreadChatCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
+                      {unreadChatCount > 9 ? '9+' : unreadChatCount}
+                    </span>
+                  )}
+                </div>
+                {!collapsed && (
+                  <div className="flex-1 flex items-center justify-between">
+                    <span>{item.label}</span>
+                    {item.href === '/chat' && unreadChatCount > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                        {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                      </span>
+                    )}
+                  </div>
+                )}
               </Link>
             )
           })}

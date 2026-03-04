@@ -13,6 +13,7 @@ import { useActiveList } from '@/components/chat/active-status-provider';
 import { ArrowLeft, Loader2, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/utils';
+import { playNotificationSound } from '@/lib/utils/audio';
 import Link from 'next/link';
 
 interface Message {
@@ -49,7 +50,7 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
   const [isSendingTyping, setIsSendingTyping] = useState(false);
   const activeUsers = useActiveList();
   
-  const isOnline = activeUsers.has(otherUser.id) || otherUser.isOnline;
+  const isOnline = activeUsers.has(otherUser.id);
 
   // Load messages
   useEffect(() => {
@@ -79,9 +80,12 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
     events: {
       [EVENTS.NEW_PRIVATE_MESSAGE]: (data: unknown) => {
         const msg = data as Message;
+        
         setMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev;
           if (msg.sender?.id === session?.user?.id) return prev;
+          
+          playNotificationSound();
           return [...prev, msg];
         });
       },
@@ -163,7 +167,7 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/90 backdrop-blur-sm">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
         {onBack && (
           <button
             onClick={onBack}

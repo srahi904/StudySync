@@ -10,6 +10,7 @@ import { usePusherMulti } from '@/hooks/use-pusher';
 import { CHANNELS, EVENTS } from '@/lib/pusher/channels';
 import { Hash, ChevronDown, ChevronUp, Users, Loader2, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { playNotificationSound } from '@/lib/utils/audio';
 import Link from 'next/link';
 
 interface Channel {
@@ -39,6 +40,7 @@ export function PublicChatPanel() {
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Load channels
   useEffect(() => {
@@ -98,10 +100,13 @@ export function PublicChatPanel() {
     events: {
       [EVENTS.NEW_PUBLIC_MESSAGE]: (data: unknown) => {
         const msg = data as Message;
+        
         setMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev;
           // Don't add own message (already added optimistically)
           if (msg.sender?.id === session?.user?.id) return prev;
+          
+          playNotificationSound();
           return [...prev, msg];
         });
       },
@@ -181,11 +186,24 @@ export function PublicChatPanel() {
     }).catch(() => {});
   }, [activeChannel]);
 
+  // Close channel dropdown when clicking outside
+  useEffect(() => {
+    const onMouseDown = (event: MouseEvent) => {
+      if (!panelRef.current) return;
+      if (!panelRef.current.contains(event.target as Node)) {
+        setShowChannels(false);
+      }
+    };
+
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, []);
+
   if (collapsed) {
     return (
       <button
         onClick={() => setCollapsed(false)}
-        className="fixed bottom-24 lg:bottom-8 right-4 z-30 bg-primary text-primary-foreground p-3 rounded-full shadow-lg shadow-primary/25 hover:opacity-90 transition-all"
+        className="fixed bottom-24 lg:bottom-8 right-4 z-20 bg-primary text-primary-foreground p-3 rounded-full shadow-lg shadow-primary/25 hover:opacity-90 transition-all"
         title="Open Public Chat"
       >
         <Hash className="w-5 h-5" />
@@ -194,9 +212,9 @@ export function PublicChatPanel() {
   }
 
   return (
-    <div className="fixed bottom-24 lg:bottom-8 right-4 z-30 w-80 h-[28rem] bg-card border border-border rounded-2xl shadow-2xl shadow-black/10 flex flex-col overflow-hidden">
+    <div ref={panelRef} className="fixed bottom-24 lg:bottom-8 right-4 z-[100] w-80 h-[28rem] bg-card/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/90 backdrop-blur-sm">
+      <div className="relative flex items-center justify-between px-4 py-3 border-b border-border/50 bg-muted/10">
         <div className="flex items-center gap-2 min-w-0">
           <Hash className="w-4 h-4 text-primary flex-shrink-0" />
           <button
@@ -227,13 +245,13 @@ export function PublicChatPanel() {
 
       {/* Channel selector dropdown */}
       {showChannels && (
-        <div className="border-b border-border bg-muted/30 max-h-32 overflow-y-auto">
+        <div className="absolute top-14 left-3 right-3 z-30 border border-border bg-card rounded-lg shadow-lg max-h-40 overflow-y-auto">
           {channels.map((ch) => (
             <button
               key={ch.id}
               onClick={() => { setActiveChannel(ch); setShowChannels(false); }}
               className={cn(
-                'w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-muted/50 transition-colors',
+                'w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-muted transition-colors',
                 ch.id === activeChannel?.id && 'bg-primary/10 text-primary'
               )}
             >

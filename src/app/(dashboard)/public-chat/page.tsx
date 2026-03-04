@@ -10,6 +10,7 @@ import { usePusherMulti } from '@/hooks/use-pusher';
 import { CHANNELS, EVENTS } from '@/lib/pusher/channels';
 import { Hash, Users, Loader2, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { playNotificationSound } from '@/lib/utils/audio';
 
 interface Channel {
   id: string;
@@ -95,9 +96,12 @@ export default function PublicChatFullScreenPage() {
     events: {
       [EVENTS.NEW_PUBLIC_MESSAGE]: (data: unknown) => {
         const msg = data as Message;
+        
         setMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev;
           if (msg.sender?.id === session?.user?.id) return prev;
+          
+          playNotificationSound();
           return [...prev, msg];
         });
       },
@@ -215,9 +219,9 @@ export default function PublicChatFullScreenPage() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-background/50 relative">
+      <div className="flex-1 flex flex-col min-w-0 bg-background relative">
         {/* Header */}
-        <div className="h-16 border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-10 flex items-center px-4 md:px-6">
+        <div className="h-16 border-b border-border bg-card sticky top-0 z-10 flex items-center px-4 md:px-6">
           <div className="flex items-center gap-2">
             <Hash className="w-5 h-5 text-primary" />
             <h1 className="font-bold text-lg">{activeChannel?.name || 'Loading...'}</h1>

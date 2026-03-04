@@ -21,10 +21,15 @@ export const cache = {
 
     try {
       const cached = await redis.get(key)
-      if (cached) return cached as T
+      if (cached) {
+        if (typeof cached === 'string') {
+          try { return JSON.parse(cached) } catch { return cached as T }
+        }
+        return cached as T
+      }
 
       const fresh = await fallback()
-      await redis.setex(key, ttl, JSON.stringify(fresh))
+      await redis.setex(key, ttl, fresh)
       return fresh
     } catch {
       // Redis error — fall through to DB
@@ -36,7 +41,7 @@ export const cache = {
   async set(key: string, value: unknown, ttl = 3600) {
     if (!redis) return
     try {
-      await redis.setex(key, ttl, JSON.stringify(value))
+      await redis.setex(key, ttl, value)
     } catch {
       // Silently fail — caching is best-effort
     }

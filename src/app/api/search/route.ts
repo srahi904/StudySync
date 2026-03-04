@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
     // Search for users matching the query
     const usersPromise = prisma.user.findMany({
       where: {
+        isActive: true,
         OR: [
           { name: { contains: query, mode: 'insensitive' } },
           { university: { contains: query, mode: 'insensitive' } },

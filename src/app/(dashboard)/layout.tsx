@@ -9,6 +9,7 @@ import { Header } from '@/components/dashboard/header'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
 import { PublicChatPanel } from '@/components/chat/public-chat-panel'
 import { ActiveStatusProvider } from '@/components/chat/active-status-provider'
+import { GlobalChatListener } from '@/components/chat/global-chat-listener'
 import { cn } from '@/lib/utils'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -73,6 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <MobileNav />
       <ActiveStatusProvider />
+      <GlobalChatListener />
     </div>
   )
 }

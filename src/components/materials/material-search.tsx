@@ -6,9 +6,9 @@ import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 
 function useDebounce(fn: (v: string) => void, delay: number) {
-  const timer = useRef<ReturnType<typeof setTimeout>>()
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   return useCallback((value: string) => {
-    clearTimeout(timer.current)
+    if (timer.current) clearTimeout(timer.current)
     timer.current = setTimeout(() => fn(value), delay)
   }, [fn, delay])
 }

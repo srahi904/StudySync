@@ -38,9 +38,9 @@ export function UserMenu() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 w-64 bg-card border border-border rounded-xl shadow-2xl py-2 animate-in fade-in-0 zoom-in-95 duration-200">
+        <div className="absolute right-0 top-12 w-64 bg-card/95 backdrop-blur-xl border border-border/60 rounded-xl shadow-2xl py-2 z-[100] animate-in fade-in-0 zoom-in-95 duration-200">
           {/* User info */}
-          <div className="px-4 py-3 border-b border-border">
+          <div className="px-4 py-3 border-b border-border bg-card">
             <p className="font-semibold text-sm">{user.name}</p>
             <p className="text-xs text-muted-foreground truncate">{user.email}</p>
           </div>

@@ -96,3 +96,40 @@ export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>
 export type VerifyEmailInput = z.infer<typeof VerifyEmailSchema>
 export type OnboardingInput = z.infer<typeof OnboardingSchema>
 export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>
+
+// ─── Study Groups schemas ──────────────────────────────────
+export const CreateGroupSchema = z.object({
+  name: z.string().min(3, 'Name must be at least 3 characters').max(80),
+  description: z.string().max(500).optional(),
+  subject: z.string().min(1, 'Subject is required').max(100),
+  tags: z.array(z.string().max(30)).max(10).optional(),
+  privacy: z.enum(['PUBLIC', 'PRIVATE', 'INVITE_ONLY']).default('PUBLIC'),
+  maxMembers: z.number().int().min(2).max(500).default(50),
+})
+
+export const UpdateGroupSchema = CreateGroupSchema.partial().extend({
+  avatar: z.string().url().optional().nullable(),
+  coverImage: z.string().url().optional().nullable(),
+  settings: z.object({
+    allowInvites: z.boolean().optional(),
+    allowMaterialSharing: z.boolean().optional(),
+  }).optional(),
+})
+
+export const InviteUserSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+})
+
+export const SendJoinRequestSchema = z.object({
+  message: z.string().max(300).optional(),
+})
+
+export const UpdateMemberRoleSchema = z.object({
+  role: z.enum(['ADMIN', 'MEMBER']),
+})
+
+export type CreateGroupInput = z.infer<typeof CreateGroupSchema>
+export type UpdateGroupInput = z.infer<typeof UpdateGroupSchema>
+export type InviteUserInput = z.infer<typeof InviteUserSchema>
+export type UpdateMemberRoleInput = z.infer<typeof UpdateMemberRoleSchema>
+

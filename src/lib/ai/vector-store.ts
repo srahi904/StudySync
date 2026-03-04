@@ -9,6 +9,7 @@ export async function storeChunkEmbeddings(
     index: number;
     embedding: number[];
     metadata?: any;
+    tokenCount?: number;
   }>
 ) {
   for (const chunk of chunks) {
@@ -16,7 +17,7 @@ export async function storeChunkEmbeddings(
     const id = crypto.randomUUID();
     
     await prisma.$executeRaw`
-      INSERT INTO "material_chunks" ("id", "materialId", "chunk_text", "chunk_index", "embedding", "metadata", "created_at")
+      INSERT INTO "material_chunks" ("id", "materialId", "chunk_text", "chunk_index", "embedding", "metadata", "tokenCount", "created_at")
       VALUES (
         ${id},
         ${materialId},
@@ -24,6 +25,7 @@ export async function storeChunkEmbeddings(
         ${chunk.index},
         ${embeddingString}::vector,
         ${chunk.metadata ? JSON.stringify(chunk.metadata) : '{}'}::jsonb,
+        ${chunk.tokenCount || null},
         NOW()
       )
     `;

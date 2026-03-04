@@ -66,10 +66,15 @@ export async function POST(
     }
     
     // Step 4: Store in vector database
-    const chunksWithEmbeddings = chunks.map((chunk, i) => ({
-      ...chunk,
-      embedding: allEmbeddings[i],
-    }));
+    const chunksWithEmbeddings = chunks.map((chunk, i) => {
+      // rough token estimation (words * 1.3)
+      const estimatedTokens = Math.ceil(chunk.text.split(/\\s+/).length * 1.3);
+      return {
+        ...chunk,
+        embedding: allEmbeddings[i],
+        tokenCount: estimatedTokens,
+      };
+    });
     
     await storeChunkEmbeddings(materialId, chunksWithEmbeddings);
     

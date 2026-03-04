@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Menu, Bell } from 'lucide-react'
 import { UserMenu } from './user-menu'
 import { GlobalSearch } from './global-search'
+import { NotificationsDropdown } from './notifications-dropdown'
 import { cn } from '@/lib/utils'
 
 interface HeaderProps {
@@ -43,30 +44,29 @@ export function Header({ collapsed, onMenuClick }: HeaderProps) {
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 h-[var(--header-height)] border-b border-border bg-background/80 backdrop-blur-xl flex items-center px-4 md:px-6 gap-4 transition-all duration-300',
-        collapsed ? 'lg:ml-[var(--sidebar-collapsed)]' : 'lg:ml-[var(--sidebar-width)]'
+        'sticky top-2 z-40 mx-4 md:mx-6 mb-4 h-16 rounded-2xl glass-panel flex items-center px-4 md:px-6 gap-4 transition-all duration-300',
+        collapsed ? 'lg:ml-[calc(var(--sidebar-collapsed)+1rem)]' : 'lg:ml-[calc(var(--sidebar-width)+1rem)]'
       )}
     >
       <button
         onClick={onMenuClick}
-        className="lg:hidden text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors"
+        className="lg:hidden text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-muted/50 transition-colors"
       >
         <Menu className="w-5 h-5" />
       </button>
 
       <div className="flex-1">
-        <h2 className="text-base font-semibold capitalize">{breadcrumb}</h2>
+        <h2 className="text-base font-bold tracking-tight capitalize">{breadcrumb}</h2>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <GlobalSearch />
 
-        <button className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors relative">
-          <Bell className="w-4.5 h-4.5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
-        </button>
+        <NotificationsDropdown />
 
-        <UserMenu />
+        <div className="pl-1 border-l border-border/50 h-8 flex items-center ml-1">
+          <UserMenu />
+        </div>
       </div>
     </header>
   )

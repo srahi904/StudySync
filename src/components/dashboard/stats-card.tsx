@@ -44,7 +44,14 @@ export function StatsCard({ icon: Icon, title, value, subtitle, trend, trendUp, 
     </>
   )
 
-  const classes = "bg-card border border-border rounded-2xl p-5 hover:border-border/80 hover:shadow-lg hover:shadow-black/5 transition-all duration-300 group"
+  const classes = cn(
+    "bg-card border border-border/60 rounded-2xl p-5 transition-all duration-300 group",
+    "hover:-translate-y-1 hover:border-border",
+    color === 'blue' && "hover:shadow-[0_8px_32px_hsl(221_83%_53%/0.15)]",
+    color === 'purple' && "hover:shadow-[0_8px_32px_hsl(267_100%_64%/0.15)]",
+    color === 'green' && "hover:shadow-[0_8px_32px_hsl(160_60%_45%/0.15)]",
+    color === 'orange' && "hover:shadow-[0_8px_32px_hsl(30_80%_55%/0.15)]"
+  )
 
   if (href) {
     return <Link href={href} className={classes}>{content}</Link>

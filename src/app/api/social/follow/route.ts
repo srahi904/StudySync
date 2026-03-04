@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { triggerPusherEvent } from '@/lib/pusher/server';
 import { CHANNELS, EVENTS } from '@/lib/pusher/channels';
+import { createNotification } from '@/lib/notifications';
 
 // POST: Toggle follow/unfollow
 export async function POST(request: NextRequest) {
@@ -87,7 +88,15 @@ export async function POST(request: NextRequest) {
         }),
       ]);
 
-      // Notify target user
+      await createNotification({
+        userId: targetUserId,
+        actorId: session.user.id,
+        type: 'FOLLOW',
+        content: `${session.user.name} started following you`,
+        link: `/profile/${session.user.id}`,
+      });
+
+      // Still trigger the specific NEW_FOLLOWER event for active live lists
       await triggerPusherEvent(
         CHANNELS.user(targetUserId),
         EVENTS.NEW_FOLLOWER,

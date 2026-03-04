@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { triggerPusherEvent } from '@/lib/pusher/server';
 import { CHANNELS, EVENTS } from '@/lib/pusher/channels';
+import { MessageStatus } from '@prisma/client';
 
 // GET: Fetch messages for a conversation
 export async function GET(request: NextRequest) {
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
     if (unreadIds.length > 0) {
       await prisma.privateMessage.updateMany({
         where: { id: { in: unreadIds } },
-        data: { isRead: true, readAt: new Date(), status: 'READ' },
+        data: { isRead: true, readAt: new Date(), status: MessageStatus.READ },
       });
 
       // Notify sender that messages were read
@@ -70,6 +71,13 @@ export async function GET(request: NextRequest) {
         CHANNELS.dm(session.user.id, otherUserId),
         EVENTS.MESSAGE_READ,
         { conversationId, readBy: session.user.id, messageIds: unreadIds }
+      ).catch(() => {});
+
+      // Notify the user themselves to update their sidebar badge instantly
+      await triggerPusherEvent(
+        CHANNELS.user(session.user.id),
+        EVENTS.MESSAGE_READ,
+        { conversationId }
       ).catch(() => {});
     }
 
@@ -118,7 +126,7 @@ export async function POST(request: NextRequest) {
         senderId: session.user.id,
         content: content.trim(),
         attachments: attachments || null,
-        status: 'SENT',
+        status: MessageStatus.SENT,
       },
       include: {
         sender: { select: { id: true, name: true, avatar: true, image: true } },

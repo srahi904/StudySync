@@ -161,7 +161,7 @@ export default function UserProfilePage() {
                 )}
               </div>
               <OnlineIndicator
-                isOnline={activeUsers.has(profile.id) || profile.isOnline || false}
+                isOnline={activeUsers.has(profile.id)}
                 size="lg"
                 className="absolute bottom-1 right-2 sm:bottom-2 sm:right-3 border-4"
               />

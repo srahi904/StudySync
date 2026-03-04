@@ -25,16 +25,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Skip public paths
-  if (publicPaths.includes(pathname)) {
-    return NextResponse.next()
-  }
-
   // Check auth via JWT (no DB query — fast)
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   })
+
+  // Auth routes — redirect to dashboard if already logged in
+  if (['/', '/login', '/signup'].includes(pathname)) {
+    if (token) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    // If no token and it's a public path, let them through
+    return NextResponse.next()
+  }
+
+  // Other public paths that shouldn't redirect logged-in users
+  // but also don't require auth (e.g. /about)
+  if (publicPaths.includes(pathname)) {
+    return NextResponse.next()
+  }
 
   // Protected routes — redirect to login if not authenticated
   if (
@@ -50,13 +60,6 @@ export async function middleware(request: NextRequest) {
   ) {
     if (!token) {
       return NextResponse.redirect(new URL('/login', request.url))
-    }
-  }
-
-  // Auth routes — redirect to dashboard if already logged in
-  if (['/login', '/signup'].includes(pathname)) {
-    if (token) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
 

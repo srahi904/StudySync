@@ -52,10 +52,10 @@ export function MessageBubble({ message, isOwnMessage, showAvatar = true, onDele
       {/* Bubble */}
       <div
         className={cn(
-          'max-w-[75%] rounded-2xl px-4 py-2 relative',
+          'max-w-[85%] rounded-2xl px-4 py-2 relative shadow-sm z-10',
           isOwnMessage
-            ? 'bg-primary text-primary-foreground rounded-br-md'
-            : 'bg-muted rounded-bl-md',
+            ? 'bg-primary text-primary-foreground rounded-br-sm'
+            : 'bg-muted border border-border rounded-bl-sm',
           message._sending && 'opacity-70',
           message._failed && 'border border-destructive'
         )}

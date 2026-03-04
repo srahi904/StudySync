@@ -5,6 +5,8 @@ import { prisma } from '@/lib/db'
 import { SignupSchema } from '@/lib/validations'
 import { generateOTP, addMinutes } from '@/lib/utils'
 import { sendVerificationEmail } from '@/lib/email'
+import { encode } from 'next-auth/jwt'
+import { cookies } from 'next/headers'
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,14 +35,19 @@ export async function POST(req: NextRequest) {
     // ── 3. Hash password ─────────────────────────────────
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // ── 4. Create user ───────────────────────────────────
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-      select: { id: true, name: true, email: true },
+    // ── 4. Create pending session cookie ────────────────
+    const token = await encode({
+      token: { name, email, password: hashedPassword } as any,
+      secret: process.env.NEXTAUTH_SECRET as string,
+    })
+
+    const cookieStore = await cookies()
+    cookieStore.set('pending_signup', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 10 * 60, // 10 minutes
     })
 
     // ── 5. Generate OTP & send verification email ────────
@@ -60,7 +67,6 @@ export async function POST(req: NextRequest) {
       {
         success: true,
         message: 'Account created successfully! Check your email for the verification code.',
-        data: { user },
       },
       { status: 201 }
     )

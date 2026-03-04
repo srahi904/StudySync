@@ -23,6 +23,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Channel ID required' }, { status: 400 });
     }
 
+    const channel = await prisma.publicChannel.findUnique({ where: { id: channelId } });
+    if (!channel || !channel.isActive) {
+      return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+    }
+
+    if (channel.name.startsWith('group-')) {
+      const groupId = channel.name.replace('group-', '');
+      const group = await prisma.studyGroup.findUnique({
+        where: { id: groupId },
+        include: { members: { where: { userId: session.user.id } } }
+      });
+
+      if (!group || group.members.length === 0) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
     const messages = await prisma.publicMessage.findMany({
       where: {
         channelId,
@@ -79,6 +96,18 @@ export async function POST(request: NextRequest) {
     const channel = await prisma.publicChannel.findUnique({ where: { id: channelId } });
     if (!channel || !channel.isActive) {
       return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+    }
+
+    if (channel.name.startsWith('group-')) {
+      const groupId = channel.name.replace('group-', '');
+      const group = await prisma.studyGroup.findUnique({
+        where: { id: groupId },
+        include: { members: { where: { userId: session.user.id } } }
+      });
+
+      if (!group || group.members.length === 0) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     // Create message with 30-day expiry

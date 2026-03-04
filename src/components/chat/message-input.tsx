@@ -33,17 +33,17 @@ export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Type a
     }
   };
 
-  const handleInput = () => {
-    onTyping?.();
-  };
-
   const handleEmojiSelect = (emoji: string) => {
     setContent((prev) => prev + emoji);
     inputRef.current?.focus();
   };
 
+  const handleInput = () => {
+    onTyping?.();
+  };
+
   return (
-    <div className={cn('border-t border-border bg-card/50 backdrop-blur-sm', className)}>
+    <div className={cn('border-t border-border/50 bg-muted/10', className)}>
       <div className="flex items-end gap-2 p-3">
         {/* Emoji toggle */}
         <button
@@ -67,7 +67,7 @@ export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Type a
             placeholder={placeholder}
             disabled={disabled}
             rows={1}
-            className="w-full resize-none rounded-2xl bg-muted/50 border border-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 placeholder:text-muted-foreground/50 max-h-32 transition-all disabled:opacity-50"
+            className="w-full resize-none rounded-2xl bg-muted border border-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 placeholder:text-muted-foreground/50 max-h-32 transition-all disabled:opacity-50"
             style={{ minHeight: '42px' }}
           />
         </div>
@@ -79,7 +79,7 @@ export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Type a
           className={cn(
             'p-2.5 rounded-full transition-all flex-shrink-0',
             content.trim() && !disabled
-              ? 'bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25'
+              ? 'bg-primary text-primary-foreground hover:opacity-90'
               : 'bg-muted text-muted-foreground cursor-not-allowed'
           )}
           title="Send message"
@@ -91,7 +91,7 @@ export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Type a
       {/* Emoji picker */}
       {showEmoji && (
         <div className="px-3 pb-3">
-          <div className="flex flex-wrap gap-1 p-2 bg-muted/30 rounded-xl max-h-32 overflow-y-auto">
+          <div className="flex flex-wrap gap-1 p-2 bg-muted rounded-xl max-h-32 overflow-y-auto">
             {['😀', '😂', '😍', '🤔', '👍', '👋', '🎉', '🔥', '❤️', '💯',
               '😊', '😎', '🤝', '💪', '📚', '✨', '🚀', '💡', '👏', '🙏',
               '😅', '🤣', '😢', '😤', '🥳', '🤯', '😱', '🤗', '🫡', '✅'].map((emoji) => (
