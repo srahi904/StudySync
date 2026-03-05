@@ -99,6 +99,15 @@ model User {
   reportsFiled    Report[] @relation("ReportsFiled")
   reportsReceived Report[] @relation("ReportsReceived")
 
+  // Smart Matching
+  matchingEnabled      Boolean          @default(true)
+  preferences          UserPreferences?
+  matchesAsUser1       Match[]          @relation("MatchUser1")
+  matchesAsUser2       Match[]          @relation("MatchUser2")
+  matchActions         MatchAction[]    @relation("MatchActions")
+  targetMatchActions   MatchAction[]    @relation("TargetMatchActions")
+  dailySuggestions     DailySuggestion[] @relation("DailySuggestions")
+
   @@index([email])
   @@index([role])
   @@index([lastActiveAt])
@@ -785,4 +794,162 @@ enum ReportStatus {
   REVIEWING
   RESOLVED
   DISMISSED
+}
+
+// ============================================
+// SMART MATCHING
+// ============================================
+
+model UserPreferences {
+  id               String        @id @default(cuid())
+  userId           String        @unique
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Subjects & Interests
+  subjects         String[]      @default([])
+  interests        String[]      @default([])
+
+  // Learning Progress  { "React": "intermediate", "Node": "beginner" }
+  learningProgress Json?         @default("{}")
+
+  // Study Preferences
+  studyTimes       String[]      @default([])
+  timezone         String?
+  preferredGroupSize Int         @default(4)
+
+  // Goals & Style
+  goals            String[]      @default([])
+  learningStyle    LearningStyle @default(VISUAL)
+  studyFrequency   String?
+
+  // Availability
+  availableDays    String[]      @default([])
+  hoursPerWeek     Int?
+
+  // Preferences
+  preferredLanguage String?
+  lookingFor       String[]      @default([])
+
+  // Metadata
+  updatedAt        DateTime      @updatedAt
+  isActive         Boolean       @default(true)
+
+  @@index([userId])
+  @@map("user_preferences")
+}
+
+model Match {
+  id              String      @id @default(cuid())
+
+  user1Id         String
+  user2Id         String
+  user1           User        @relation("MatchUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2           User        @relation("MatchUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  score           Float
+  scoreBreakdown  Json?
+  matchedSubjects String[]    @default([])
+  matchReason     String?     @db.Text
+
+  status          MatchStatus @default(PENDING)
+  initiatedBy     String
+  respondedAt     DateTime?
+  expiresAt       DateTime
+
+  chatConversationId String?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id, status])
+  @@index([user2Id, status])
+  @@index([status, expiresAt])
+  @@index([createdAt])
+  @@map("matches")
+}
+
+model MatchAction {
+  id            String          @id @default(cuid())
+
+  userId        String
+  user          User            @relation("MatchActions", fields: [userId], references: [id], onDelete: Cascade)
+
+  targetUserId  String
+  targetUser    User            @relation("TargetMatchActions", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  action        MatchActionType
+  reason        String?
+  expiresAt     DateTime?
+
+  createdAt     DateTime        @default(now())
+
+  @@unique([userId, targetUserId, action])
+  @@index([userId, action])
+  @@index([targetUserId])
+  @@index([expiresAt])
+  @@map("match_actions")
+}
+
+model DailySuggestion {
+  id               String    @id @default(cuid())
+
+  userId           String
+  user             User      @relation("DailySuggestions", fields: [userId], references: [id], onDelete: Cascade)
+
+  suggestedUserIds String[]
+  tempGroupId      String?
+  tempGroupExpiry  DateTime?
+
+  viewed           Boolean   @default(false)
+  viewedAt         DateTime?
+  joined           Boolean   @default(false)
+  joinedAt         DateTime?
+
+  createdAt        DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([tempGroupId])
+  @@index([tempGroupExpiry])
+  @@map("daily_suggestions")
+}
+
+model MatchAnalytics {
+  id               String   @id @default(cuid())
+  matchId          String
+  user1Id          String
+  user2Id          String
+  score            Float
+  accepted         Boolean
+  responseTime     Int?
+  algorithmVersion String   @default("v1")
+  createdAt        DateTime @default(now())
+
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([accepted])
+  @@index([algorithmVersion])
+  @@map("match_analytics")
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+enum MatchActionType {
+  SKIP
+  BLOCK
+  REPORT
+}
+
+enum LearningStyle {
+  VISUAL
+  AUDITORY
+  KINESTHETIC
+  READING_WRITING
+  MIXED
 }

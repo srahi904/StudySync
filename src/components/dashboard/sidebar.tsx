@@ -23,7 +23,7 @@ const NAV_ITEMS = [
   { label: 'Explore', icon: Compass, href: '/explore' },
   { label: 'Groups', icon: Users, href: '/groups' },
 
-  { label: 'Matching', icon: Heart, href: '/matching', disabled: true },
+  { label: 'Matching', icon: Heart, href: '/matching' },
   { label: 'Quizzes', icon: Award, href: '/quizzes', disabled: true },
   { label: 'Analytics', icon: BarChart3, href: '/analytics', disabled: true },
 ]
