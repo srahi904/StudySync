@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useCallback, KeyboardEvent } from 'react';
-import { Send, Smile, Paperclip, X } from 'lucide-react';
+import { Send, Smile, Plus, X, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MessageInputProps {
@@ -16,7 +16,7 @@ interface MessageInputProps {
 export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Type a message...', className }: MessageInputProps) {
   const [content, setContent] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = useCallback(() => {
     if (!content.trim() || disabled) return;
@@ -26,8 +26,8 @@ export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Type a
     inputRef.current?.focus();
   }, [content, disabled, onSend]);
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
       e.preventDefault();
       handleSend();
     }
@@ -43,21 +43,21 @@ export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Type a
   };
 
   return (
-    <div className={cn('border-t border-border/50 bg-muted/10', className)}>
-      <div className="flex items-end gap-2 p-3">
-        {/* Emoji toggle */}
+    <div className={cn('px-4 py-3 bg-card border-t border-border/50', className)}>
+      <div className="flex items-center gap-2">
+        {/* Attach */}
         <button
-          onClick={() => setShowEmoji(!showEmoji)}
-          className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex-shrink-0"
-          title="Emoji"
+          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors"
+          title="Add attachment"
         >
-          {showEmoji ? <X className="w-5 h-5" /> : <Smile className="w-5 h-5" />}
+          <Plus className="w-5 h-5" />
         </button>
 
-        {/* Text input */}
-        <div className="flex-1 relative">
-          <textarea
+        {/* Input */}
+        <div className="flex-1 flex items-center bg-muted/50 dark:bg-muted/30 rounded-full px-4 h-11 border border-border/30 focus-within:border-primary/30 transition-colors">
+          <input
             ref={inputRef}
+            type="text"
             value={content}
             onChange={(e) => {
               setContent(e.target.value);
@@ -66,21 +66,26 @@ export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Type a
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={disabled}
-            rows={1}
-            className="w-full resize-none rounded-2xl bg-muted border border-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 placeholder:text-muted-foreground/50 max-h-32 transition-all disabled:opacity-50"
-            style={{ minHeight: '42px' }}
+            className="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground/50 disabled:opacity-50"
           />
+          <button
+            onClick={() => setShowEmoji(!showEmoji)}
+            className="ml-2 text-muted-foreground/60 hover:text-foreground transition-colors flex-shrink-0"
+            title="Emoji"
+          >
+            {showEmoji ? <X className="w-[18px] h-[18px]" /> : <Smile className="w-[18px] h-[18px]" />}
+          </button>
         </div>
 
-        {/* Send button */}
+        {/* Send */}
         <button
           onClick={handleSend}
           disabled={!content.trim() || disabled}
           className={cn(
-            'p-2.5 rounded-full transition-all flex-shrink-0',
+            'flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all',
             content.trim() && !disabled
               ? 'bg-primary text-primary-foreground hover:opacity-90'
-              : 'bg-muted text-muted-foreground cursor-not-allowed'
+              : 'text-muted-foreground/40 cursor-not-allowed'
           )}
           title="Send message"
         >
@@ -88,17 +93,23 @@ export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Type a
         </button>
       </div>
 
+      {/* Security note */}
+      <div className="flex items-center justify-center gap-1 mt-2 text-[10px] text-muted-foreground/40">
+        <Lock className="w-2.5 h-2.5" />
+        <span>End-to-end encrypted</span>
+      </div>
+
       {/* Emoji picker */}
       {showEmoji && (
-        <div className="px-3 pb-3">
-          <div className="flex flex-wrap gap-1 p-2 bg-muted rounded-xl max-h-32 overflow-y-auto">
+        <div className="mt-2">
+          <div className="flex flex-wrap gap-1 p-2 bg-muted/50 border border-border/30 rounded-xl max-h-28 overflow-y-auto">
             {['😀', '😂', '😍', '🤔', '👍', '👋', '🎉', '🔥', '❤️', '💯',
               '😊', '😎', '🤝', '💪', '📚', '✨', '🚀', '💡', '👏', '🙏',
               '😅', '🤣', '😢', '😤', '🥳', '🤯', '😱', '🤗', '🫡', '✅'].map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => handleEmojiSelect(emoji)}
-                className="w-9 h-9 flex items-center justify-center hover:bg-muted rounded-lg transition-colors text-lg"
+                className="w-8 h-8 flex items-center justify-center hover:bg-muted rounded-lg transition-colors text-base"
               >
                 {emoji}
               </button>

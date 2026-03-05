@@ -10,7 +10,7 @@ import { OnlineIndicator } from './online-indicator';
 import { usePusherMulti } from '@/hooks/use-pusher';
 import { CHANNELS, EVENTS } from '@/lib/pusher/channels';
 import { useActiveList } from '@/components/chat/active-status-provider';
-import { ArrowLeft, Loader2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Loader2, MessageSquare, Phone, Video, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/utils';
 import { playNotificationSound } from '@/lib/utils/audio';
@@ -89,6 +89,15 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
           playNotificationSound();
           return [...prev, msg];
         });
+
+        // Mark it as read immediately since the user is in the chat window
+        if (msg.sender?.id !== session?.user?.id) {
+          fetch('/api/chat/private/mark-read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversationId })
+          }).catch(console.error);
+        }
       },
       [EVENTS.MESSAGE_READ]: (data: unknown) => {
         const { messageIds } = data as { messageIds: string[] };
@@ -168,37 +177,53 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
-        {onBack && (
-          <button
-            onClick={onBack}
-            className="p-1.5 rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors lg:hidden"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        )}
-        <Link href={`/profile/${otherUser.username || otherUser.id}`} className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="relative flex-shrink-0 w-10 h-10">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-sm font-bold text-white">{getInitials(otherUser.name)}</span>
-              )}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border/40 bg-card/80 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="p-1.5 rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors lg:hidden"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+          <Link href={`/profile/${otherUser.username || otherUser.id}`} className="flex items-center gap-3 group">
+            <div className="relative flex-shrink-0 w-11 h-11">
+              <div className="w-11 h-11 rounded-full overflow-hidden bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-sm">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-sm font-bold text-white">{getInitials(otherUser.name)}</span>
+                )}
+              </div>
+              <OnlineIndicator
+                isOnline={isOnline || false}
+                size="sm"
+                className="absolute -bottom-0.5 -right-0.5 border-2 border-background"
+              />
             </div>
-            <OnlineIndicator
-              isOnline={isOnline || false}
-              size="sm"
-              className="absolute -bottom-0.5 -right-0.5"
-            />
-          </div>
-          <div className="min-w-0">
-            <p className="font-semibold text-sm truncate">{otherUser.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {isOnline ? 'Online' : 'Offline'}
-            </p>
-          </div>
-        </Link>
+            <div className="min-w-0 flex flex-col justify-center">
+              <p className="font-bold text-[15px] truncate group-hover:text-primary transition-colors">{otherUser.name}</p>
+              <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 mt-0.5 font-medium">
+                Student
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/40"></span>
+                {isOnline ? 'Active now' : 'Offline'}
+              </p>
+            </div>
+          </Link>
+        </div>
+        
+        <div className="flex items-center gap-4 text-muted-foreground">
+          <button className="hover:text-foreground transition-colors p-1" title="Voice call">
+            <Phone className="w-5 h-5" />
+          </button>
+          <button className="hover:text-foreground transition-colors p-1" title="Video call">
+            <Video className="w-5 h-5" />
+          </button>
+          <button className="hover:text-foreground transition-colors p-1" title="Information">
+            <Info className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}

@@ -74,7 +74,7 @@ export function CreateGroupForm() {
         <label className="block text-sm font-medium text-foreground mb-2">Subject *</label>
         <select
           {...form.register('subject')}
-          className="w-full rounded-xl border border-border/50 bg-muted/30 px-4 py-3 text-sm focus:border-primary/50 focus:outline-none transition-colors appearance-none"
+          className="w-full rounded-xl border border-border/50 bg-background px-4 py-3 text-sm focus:border-primary/50 focus:outline-none transition-colors appearance-none dark:bg-card dark:[color-scheme:dark]"
         >
           <option value="">Select a subject...</option>
           {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}

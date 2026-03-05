@@ -145,7 +145,7 @@ export default function UserProfilePage() {
       </button>
 
       {/* Profile header */}
-      <div className="bg-card border border-border rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border/60 rounded-2xl overflow-hidden shadow-sm">
         {/* Cover */}
         <div className="h-32 sm:h-44 bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/10 relative">
           {profile.coverPhoto && (

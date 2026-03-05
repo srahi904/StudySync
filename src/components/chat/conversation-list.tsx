@@ -18,6 +18,7 @@ interface Conversation {
   otherUser: {
     id: string;
     name: string;
+    username?: string | null;
     avatar?: string | null;
     image?: string | null;
     isOnline?: boolean;
@@ -111,33 +112,33 @@ export function ConversationList({ selectedId, onSelect, onNewChat }: Conversati
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-transparent">
       {/* Header */}
-      <div className="px-4 py-4 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-lg">Messages</h2>
+      <div className="px-4 py-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-xl tracking-tight text-foreground">Chats</h2>
           <button
             onClick={onNewChat}
-            className="p-2 rounded-full hover:bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+            className="p-2 -mr-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
             title="New conversation"
           >
             <MessageCirclePlus className="w-5 h-5" />
           </button>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="relative group">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search conversations..."
-            className="w-full rounded-xl bg-muted/50 border border-border pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+            className="w-full rounded-xl bg-muted/60 border-transparent pl-10 pr-4 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/70 transition-all font-medium"
           />
         </div>
       </div>
 
       {/* Conversation list */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-2 space-y-0.5 pb-4">
         {loading ? (
           <div className="flex items-center justify-center h-32">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -152,19 +153,28 @@ export function ConversationList({ selectedId, onSelect, onNewChat }: Conversati
           </div>
         ) : (
           filtered.map((conv) => {
+            const isSelected = selectedId === conv.id;
+            const isOnline = activeUsers.has(conv.otherUser.id);
             const avatarUrl = conv.otherUser.avatar || conv.otherUser.image;
+
             return (
               <button
                 key={conv.id}
                 onClick={() => onSelect(conv)}
                 className={cn(
-                  'w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left',
-                  selectedId === conv.id && 'bg-primary/5 border-r-2 border-r-primary'
+                  'w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 relative overflow-hidden group',
+                  isSelected
+                    ? 'bg-muted/80 shadow-sm'
+                    : 'hover:bg-muted/50'
                 )}
               >
-                {/* Avatar */}
+                {/* Active indicator bar */}
+                {isSelected && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-md" />
+                )}
+
                 <div className="relative flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary/80 to-secondary/80 flex items-center justify-center">
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -172,35 +182,48 @@ export function ConversationList({ selectedId, onSelect, onNewChat }: Conversati
                     )}
                   </div>
                   <OnlineIndicator
-                    isOnline={activeUsers.has(conv.otherUser.id)}
+                    isOnline={isOnline || false}
                     size="sm"
-                    className="absolute -bottom-0.5 -right-0.5"
+                    className="absolute bottom-0 right-0 border-2 border-background"
                   />
                 </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className={cn('text-sm font-semibold truncate', conv.unreadCount > 0 && 'text-foreground')}>
-                      {conv.otherUser.name}
-                    </span>
-                    {conv.lastMessage && (
-                      <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">
-                        {formatTime(conv.lastMessage.createdAt)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between mt-0.5">
+                <div className="flex-1 min-w-0 py-0.5">
+                  <div className="flex justify-between items-baseline mb-0.5">
                     <p className={cn(
-                      'text-xs truncate',
-                      conv.unreadCount > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'
+                      'font-semibold text-[14px] truncate tracking-tight',
+                      isSelected ? 'text-primary' : 'text-foreground hover:text-primary transition-colors'
                     )}>
-                      {conv.lastMessage?.content || 'Start chatting!'}
+                      {conv.otherUser.name}
                     </p>
-                    {conv.unreadCount > 0 && (
-                      <span className="ml-2 flex-shrink-0 min-w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1.5">
-                        {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
+                    <span className={cn(
+                      'text-[11px] font-medium flex-shrink-0 ml-2',
+                      conv.unreadCount > 0 ? 'text-primary' : 'text-muted-foreground/80'
+                    )}>
+                      {conv.lastMessageAt ? formatTime(conv.lastMessageAt) : ''}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center gap-2">
+                    <p className={cn(
+                      'text-[13px] truncate',
+                      conv.unreadCount > 0
+                        ? 'font-medium text-foreground'
+                        : 'text-muted-foreground/80'
+                    )}>
+                      {conv.lastMessage ? (
+                        <>
+                          {conv.lastMessage.senderId === session?.user?.id ? 'You: ' : ''}
+                          {conv.lastMessage.content}
+                        </>
+                      ) : (
+                        <span className="italic opacity-60">Start a conversation</span>
+                      )}
+                    </p>
+                    {conv.unreadCount > 0 ? (
+                      <span className="min-w-[20px] h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1.5 flex-shrink-0">
+                        {conv.unreadCount}
                       </span>
+                    ) : (
+                      isSelected && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 shadow-sm" />
                     )}
                   </div>
                 </div>

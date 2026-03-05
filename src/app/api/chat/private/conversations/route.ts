@@ -20,10 +20,10 @@ export async function GET(request: NextRequest) {
       },
       include: {
         user1: {
-          select: { id: true, name: true, avatar: true, image: true, isOnline: true, lastSeenAt: true },
+          select: { id: true, name: true, username: true, avatar: true, image: true, isOnline: true, lastSeenAt: true },
         },
         user2: {
-          select: { id: true, name: true, avatar: true, image: true, isOnline: true, lastSeenAt: true },
+          select: { id: true, name: true, username: true, avatar: true, image: true, isOnline: true, lastSeenAt: true },
         },
         messages: {
           take: 1,
@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
     let conversation = await prisma.privateConversation.findUnique({
       where: { user1Id_user2Id: { user1Id, user2Id } },
       include: {
-        user1: { select: { id: true, name: true, avatar: true, image: true, isOnline: true } },
-        user2: { select: { id: true, name: true, avatar: true, image: true, isOnline: true } },
+        user1: { select: { id: true, name: true, username: true, avatar: true, image: true, isOnline: true } },
+        user2: { select: { id: true, name: true, username: true, avatar: true, image: true, isOnline: true } },
       },
     });
 
@@ -126,8 +126,8 @@ export async function POST(request: NextRequest) {
       conversation = await prisma.privateConversation.create({
         data: { user1Id, user2Id },
         include: {
-          user1: { select: { id: true, name: true, avatar: true, image: true, isOnline: true } },
-          user2: { select: { id: true, name: true, avatar: true, image: true, isOnline: true } },
+          user1: { select: { id: true, name: true, username: true, avatar: true, image: true, isOnline: true } },
+          user2: { select: { id: true, name: true, username: true, avatar: true, image: true, isOnline: true } },
         },
       });
     }

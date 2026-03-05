@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { cache } from '@/lib/redis'
 
 export async function GET() {
   try {
@@ -11,34 +12,43 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const prefs = await prisma.userPreferences.findUnique({
-      where: { userId: session.user.id },
-    })
+    const cacheKey = `user:${session.user.id}:prefs`
 
-    // If no prefs yet, seed with user's existing subjects/goals
-    if (!prefs) {
-      const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { subjects: true, studyGoals: true },
-      })
-      return NextResponse.json({
-        preferences: {
-          subjects: user?.subjects || [],
-          interests: [],
-          learningProgress: {},
-          studyTimes: [],
-          goals: user?.studyGoals || [],
-          learningStyle: 'VISUAL',
-          studyFrequency: null,
-          availableDays: [],
-          hoursPerWeek: null,
-          lookingFor: [],
-        },
-        isNew: true,
-      })
-    }
+    const result = await cache.get(
+      cacheKey,
+      async () => {
+        const prefs = await prisma.userPreferences.findUnique({
+          where: { userId: session.user.id },
+        })
 
-    return NextResponse.json({ preferences: prefs, isNew: false })
+        if (!prefs) {
+          const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { subjects: true, studyGoals: true },
+          })
+          return {
+            preferences: {
+              subjects: user?.subjects || [],
+              interests: [],
+              learningProgress: {},
+              studyTimes: [],
+              goals: user?.studyGoals || [],
+              learningStyle: 'VISUAL',
+              studyFrequency: null,
+              availableDays: [],
+              hoursPerWeek: null,
+              lookingFor: [],
+            },
+            isNew: true,
+          }
+        }
+
+        return { preferences: prefs, isNew: false }
+      },
+      60 // 1 min cache
+    )
+
+    return NextResponse.json(result)
   } catch (error) {
     console.error('[MATCHING_PREFS_GET]', error)
     return NextResponse.json({ error: 'Failed to load preferences' }, { status: 500 })
@@ -82,6 +92,9 @@ export async function POST(req: NextRequest) {
         lookingFor: body.lookingFor || [],
       },
     })
+
+    // Invalidate cache
+    await cache.del(`user:${session.user.id}:prefs`)
 
     return NextResponse.json({ success: true, preferences: prefs })
   } catch (error) {

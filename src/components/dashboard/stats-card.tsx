@@ -15,10 +15,34 @@ interface StatsCardProps {
 }
 
 const colorMap = {
-  blue: { bg: 'bg-blue-500/10', text: 'text-blue-400', ring: 'ring-blue-500/20' },
-  purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', ring: 'ring-purple-500/20' },
-  green: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', ring: 'ring-emerald-500/20' },
-  orange: { bg: 'bg-orange-500/10', text: 'text-orange-400', ring: 'ring-orange-500/20' },
+  blue: {
+    bg: 'bg-blue-500/10',
+    text: 'text-blue-500 dark:text-blue-400',
+    ring: 'ring-blue-500/20',
+    shadow: 'hover:shadow-[0_8px_32px_hsl(220_80%_55%/0.15)]',
+    glow: 'group-hover:bg-blue-500/15',
+  },
+  purple: {
+    bg: 'bg-purple-500/10',
+    text: 'text-purple-500 dark:text-purple-400',
+    ring: 'ring-purple-500/20',
+    shadow: 'hover:shadow-[0_8px_32px_hsl(270_80%_55%/0.15)]',
+    glow: 'group-hover:bg-purple-500/15',
+  },
+  green: {
+    bg: 'bg-emerald-500/10',
+    text: 'text-emerald-500 dark:text-emerald-400',
+    ring: 'ring-emerald-500/20',
+    shadow: 'hover:shadow-[0_8px_32px_hsl(160_60%_45%/0.15)]',
+    glow: 'group-hover:bg-emerald-500/15',
+  },
+  orange: {
+    bg: 'bg-orange-500/10',
+    text: 'text-orange-500 dark:text-orange-400',
+    ring: 'ring-orange-500/20',
+    shadow: 'hover:shadow-[0_8px_32px_hsl(30_80%_55%/0.15)]',
+    glow: 'group-hover:bg-orange-500/15',
+  },
 }
 
 export function StatsCard({ icon: Icon, title, value, subtitle, trend, trendUp, color, href }: StatsCardProps) {
@@ -27,13 +51,13 @@ export function StatsCard({ icon: Icon, title, value, subtitle, trend, trendUp, 
   const content = (
     <>
       <div className="flex items-start justify-between mb-4">
-        <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center ring-1', c.bg, c.ring)}>
+        <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center ring-1 transition-colors', c.bg, c.ring, c.glow)}>
           <Icon className={cn('w-5 h-5', c.text)} />
         </div>
         {trend && (
           <span className={cn(
-            'text-xs font-medium px-2 py-1 rounded-full',
-            trendUp ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+            'text-xs font-semibold px-2.5 py-1 rounded-full',
+            trendUp ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' : 'bg-red-500/10 text-red-500 dark:text-red-400'
           )}>
             {trendUp ? '↑' : '↓'} {trend}
           </span>
@@ -47,10 +71,7 @@ export function StatsCard({ icon: Icon, title, value, subtitle, trend, trendUp, 
   const classes = cn(
     "bg-card border border-border/60 rounded-2xl p-5 transition-all duration-300 group",
     "hover:-translate-y-1 hover:border-border",
-    color === 'blue' && "hover:shadow-[0_8px_32px_hsl(221_83%_53%/0.15)]",
-    color === 'purple' && "hover:shadow-[0_8px_32px_hsl(267_100%_64%/0.15)]",
-    color === 'green' && "hover:shadow-[0_8px_32px_hsl(160_60%_45%/0.15)]",
-    color === 'orange' && "hover:shadow-[0_8px_32px_hsl(30_80%_55%/0.15)]"
+    c.shadow
   )
 
   if (href) {

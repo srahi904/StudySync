@@ -94,7 +94,7 @@ export default function EditMaterialPage() {
         <p className="text-sm text-muted-foreground mt-0.5">Update information for: <strong>{material?.title}</strong></p>
       </div>
 
-      <form onSubmit={handleSave} className="bg-card border border-border rounded-2xl p-6 space-y-6">
+      <form onSubmit={handleSave} className="bg-card border border-border/60 rounded-2xl p-6 space-y-6">
         {/* Title */}
         <div className="space-y-2">
           <div className="flex justify-between">
@@ -126,7 +126,7 @@ export default function EditMaterialPage() {
             id="subject"
             value={subject}
             onChange={e => setSubject(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all dark:bg-card dark:[color-scheme:dark]"
           >
             <option value="">Select a subject...</option>
             {PREDEFINED_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}

@@ -64,20 +64,20 @@ export function GroupChat({ groupId, currentUserId, currentUserAvatar, currentUs
                     )}
                   </div>
                 )}
-                <div className={`max-w-[70%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+                <div className={`max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
                   {showAvatar && !isOwn && (
-                    <span className="text-xs text-muted-foreground px-1">{msg.sender.name}</span>
+                    <span className="text-[11px] font-semibold text-muted-foreground px-2 mb-1 tracking-wide">{msg.sender.name}</span>
                   )}
-                  <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                  <div className={`relative px-3.5 py-2 rounded-2xl flex flex-col ${
                     isOwn
-                      ? 'bg-primary text-primary-foreground rounded-br-sm'
-                      : 'bg-muted text-foreground rounded-bl-sm'
+                      ? 'bg-[#dcf8c6] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] rounded-br-sm'
+                      : 'bg-[#ffffff] dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef] rounded-bl-sm shadow-sm'
                   }`}>
-                    {msg.content}
+                    <span className="text-[14px] break-words whitespace-pre-wrap leading-relaxed">{msg.content}</span>
+                    <span className="text-[10px] mt-1 self-end font-medium text-[#667781] dark:text-[#8696a0]">
+                      {format(new Date(msg.createdAt), 'h:mm a')}
+                    </span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground px-1">
-                    {format(new Date(msg.createdAt), 'h:mm a')}
-                  </span>
                 </div>
               </div>
             )
@@ -87,19 +87,21 @@ export function GroupChat({ groupId, currentUserId, currentUserAvatar, currentUs
       </div>
 
       {/* Input */}
-      <div className="border-t border-border/50 p-4">
-        <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/30 px-4 py-2 focus-within:border-primary/50 transition-colors">
-          <input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-            placeholder="Type a message..."
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
+      <div className="border-t border-border/50 px-4 py-3 bg-card">
+        <div className="flex items-center gap-2">
+          <div className="flex-1 flex items-center bg-muted/50 dark:bg-muted/30 rounded-full px-4 h-11 border border-border/30 focus-within:border-primary/30 transition-colors">
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
+              placeholder="Type a message..."
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+            />
+          </div>
           <button
             onClick={handleSend}
             disabled={!input.trim() || sending}
-            className="p-1.5 rounded-lg bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-all"
+            className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-primary text-primary-foreground disabled:opacity-40 hover:opacity-90 transition-all"
           >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </button>

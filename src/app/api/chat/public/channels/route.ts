@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { cache } from '@/lib/redis';
 
 export async function GET() {
   try {
@@ -12,59 +13,68 @@ export async function GET() {
     }
     const userId = session.user.id;
 
-    const allChannels = await prisma.publicChannel.findMany({
-      where: { isActive: true, isArchived: false },
-      orderBy: { name: 'asc' },
-      include: {
-        _count: { select: { messages: true } },
-      },
-    });
+    const cacheKey = `user:${userId}:channels`
 
-    const regularChannels = [];
-    const groupChannelMap = new Map();
-    const groupIds: string[] = [];
-
-    for (const ch of allChannels) {
-      if (ch.name.startsWith('group-')) {
-        const groupId = ch.name.replace('group-', '');
-        groupIds.push(groupId);
-        groupChannelMap.set(groupId, ch);
-      } else {
-        regularChannels.push(ch);
-      }
-    }
-
-    const allowedGroupChannels = [];
-
-    if (groupIds.length > 0) {
-      const groups = await prisma.studyGroup.findMany({
-        where: {
-          id: { in: groupIds },
-          isArchived: false,
-        },
-        select: {
-          id: true,
-          name: true,
-          privacy: true,
-          members: {
-            where: { userId },
-            select: { id: true },
+    const finalChannels = await cache.get(
+      cacheKey,
+      async () => {
+        const allChannels = await prisma.publicChannel.findMany({
+          where: { isActive: true, isArchived: false },
+          orderBy: { name: 'asc' },
+          include: {
+            _count: { select: { messages: true } },
           },
-        },
-      });
+        });
 
-      for (const group of groups) {
-        if (group.members.length > 0) {
-          const ch = groupChannelMap.get(group.id);
-          if (ch) {
-            allowedGroupChannels.push({ ...ch, name: group.name });
+        const regularChannels = [];
+        const groupChannelMap = new Map();
+        const groupIds: string[] = [];
+
+        for (const ch of allChannels) {
+          if (ch.name.startsWith('group-')) {
+            const groupId = ch.name.replace('group-', '');
+            groupIds.push(groupId);
+            groupChannelMap.set(groupId, ch);
+          } else {
+            regularChannels.push(ch);
           }
         }
-      }
-    }
 
-    const finalChannels = [...regularChannels, ...allowedGroupChannels];
-    finalChannels.sort((a, b) => a.name.localeCompare(b.name));
+        const allowedGroupChannels = [];
+
+        if (groupIds.length > 0) {
+          const groups = await prisma.studyGroup.findMany({
+            where: {
+              id: { in: groupIds },
+              isArchived: false,
+            },
+            select: {
+              id: true,
+              name: true,
+              privacy: true,
+              members: {
+                where: { userId },
+                select: { id: true },
+              },
+            },
+          });
+
+          for (const group of groups) {
+            if (group.members.length > 0) {
+              const ch = groupChannelMap.get(group.id);
+              if (ch) {
+                allowedGroupChannels.push({ ...ch, name: group.name });
+              }
+            }
+          }
+        }
+
+        const result = [...regularChannels, ...allowedGroupChannels];
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        return result;
+      },
+      30 // 30s cache
+    );
 
     return NextResponse.json({ channels: finalChannels });
   } catch (error) {

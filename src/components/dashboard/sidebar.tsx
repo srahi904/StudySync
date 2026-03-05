@@ -84,7 +84,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
 
       <aside
         className={cn(
-          'fixed top-0 left-0 z-50 h-full bg-card border-r border-border flex flex-col transition-all duration-300',
+          'fixed top-0 left-0 z-50 h-full bg-card/80 backdrop-blur-xl border-r border-border/60 flex flex-col transition-all duration-300',
           collapsed ? 'w-[var(--sidebar-collapsed)]' : 'w-[var(--sidebar-width)]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
@@ -145,7 +145,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                   <div className="flex-1 flex items-center justify-between">
                     <span>{item.label}</span>
                     {item.href === '/chat' && unreadChatCount > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                      <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground shadow-sm">
                         {unreadChatCount > 99 ? '99+' : unreadChatCount}
                       </span>
                     )}

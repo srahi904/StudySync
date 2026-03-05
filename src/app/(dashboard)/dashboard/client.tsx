@@ -1,6 +1,6 @@
 'use client'
 // src/app/(dashboard)/dashboard/client.tsx
-import { Clock, BookOpen, Award, Flame } from 'lucide-react'
+import { Clock, BookOpen, Award, Flame, ArrowRight, Heart, Users, Sparkles } from 'lucide-react'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { QuickActions } from '@/components/dashboard/quick-actions'
 import dynamic from 'next/dynamic'
@@ -25,8 +25,8 @@ export function DashboardClient({ user }: DashboardClientProps) {
   const firstName = user.name?.split(' ')[0] || 'there'
   const [materialsCount, setMaterialsCount] = useState<{ total: number; thisWeek: number } | null>(null)
   const [recentMaterials, setRecentMaterials] = useState<any[]>([])
+  const [matchCount, setMatchCount] = useState<number | null>(null)
 
-  // Fetch live dashboard stats
   useEffect(() => {
     // Materials count
     fetch('/api/materials/count')
@@ -40,6 +40,12 @@ export function DashboardClient({ user }: DashboardClientProps) {
       .then(d => { if (d.success) setRecentMaterials(d.data.materials) })
       .catch(() => {})
 
+    // Match count
+    fetch('/api/matching/matches')
+      .then(r => r.json())
+      .then(d => { if (d.matches) setMatchCount(d.matches.length) })
+      .catch(() => setMatchCount(0))
+
     // Background AI Profile Match Check (delayed so it doesn't block load)
     const matchTimer = setTimeout(() => {
       fetch('/api/ai/match', { method: 'POST' }).catch(() => {})
@@ -49,13 +55,13 @@ export function DashboardClient({ user }: DashboardClientProps) {
   }, [])
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-up">
       {/* Greeting */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-display font-extrabold">
+        <h1 className="text-2xl sm:text-3xl font-display font-extrabold">
           {getGreeting()}, {firstName}! 👋
         </h1>
-        <p className="text-muted-foreground mt-1">Here&apos;s your learning overview</p>
+        <p className="text-muted-foreground mt-1 text-sm sm:text-base">Here&apos;s your learning overview</p>
       </div>
 
       {/* Stats */}
@@ -97,6 +103,45 @@ export function DashboardClient({ user }: DashboardClientProps) {
         />
       </div>
 
+      {/* Smart Matching CTA — Week 8 */}
+      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-card to-secondary/5 p-5 sm:p-6">
+        <div className="absolute top-[-60px] right-[-60px] w-[200px] h-[200px] rounded-full bg-primary/8 blur-[80px] pointer-events-none" />
+        <div className="absolute bottom-[-60px] left-[-60px] w-[200px] h-[200px] rounded-full bg-secondary/8 blur-[80px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-pink-500/20">
+            <Heart className="w-7 h-7 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-base flex items-center gap-2">
+              Smart Matching
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">NEW</span>
+            </h3>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {matchCount !== null && matchCount > 0
+                ? `You have ${matchCount} study partner${matchCount > 1 ? 's' : ''}! Find more compatible matches.`
+                : 'Find AI-matched study partners based on your subjects, goals, and learning style.'
+              }
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href="/matching"
+              className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-md shadow-primary/20"
+            >
+              <Sparkles className="w-4 h-4" /> Find Matches
+            </Link>
+            {matchCount !== null && matchCount > 0 && (
+              <Link
+                href="/matching/matches"
+                className="px-4 py-2.5 rounded-xl border border-border/50 text-sm font-medium hover:bg-muted/30 transition-all flex items-center gap-1.5"
+              >
+                <Users className="w-4 h-4" /> My Matches
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Quick Actions */}
       <div>
         <h2 className="text-lg font-semibold mb-3">Quick Actions</h2>
@@ -108,8 +153,8 @@ export function DashboardClient({ user }: DashboardClientProps) {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold">Recently Uploaded</h2>
-            <Link href="/materials" className="text-sm text-primary hover:underline">
-              View all →
+            <Link href="/materials" className="text-sm text-primary hover:underline flex items-center gap-1">
+              View all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -117,9 +162,9 @@ export function DashboardClient({ user }: DashboardClientProps) {
               <Link
                 key={m.id}
                 href={`/materials/${m.slug || m.id}`}
-                className="group flex items-start gap-3 p-4 rounded-xl border border-border bg-card hover:shadow-md hover:border-primary/30 transition-all"
+                className="group flex items-start gap-3 p-4 rounded-xl border border-border/60 bg-card hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 hover:-translate-y-0.5 transition-all"
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/15 transition-colors">
                   <BookOpen className="w-5 h-5 text-primary" />
                 </div>
                 <div className="min-w-0">
@@ -132,11 +177,11 @@ export function DashboardClient({ user }: DashboardClientProps) {
         </div>
       )}
 
-      {/* Activity Feed */}
-      <ActivityFeed />
-
-      {/* Trending Materials */}
-      <TrendingMaterials />
+      {/* Activity Feed + Trending side by side on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ActivityFeed />
+        <TrendingMaterials />
+      </div>
     </div>
   )
 }

@@ -43,7 +43,7 @@ export default function GroupsPage() {
               <span className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">{inviteCount}</span>
             </Link>
           )}
-          <Link href="/groups/discover" className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border/50 text-sm font-medium hover:border-primary/30 hover:text-primary transition-all">
+          <Link href="/groups/discover" className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border/50 text-sm font-medium hover:border-primary/30 hover:text-primary hover:bg-primary/5 transition-all">
             <Compass className="h-4 w-4" /> Discover
           </Link>
           <Link href="/groups/create" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all">
@@ -61,7 +61,7 @@ export default function GroupsPage() {
             { label: 'Admin In', value: groups.filter(g => g.myRole === 'ADMIN').length, icon: <span className="text-xl">🛡</span> },
             { label: 'Total Materials', value: groups.reduce((acc, g) => acc + (g.materialCount || 0), 0), icon: <BookOpen className="h-5 w-5 text-primary" /> },
           ].map(stat => (
-            <div key={stat.label} className="rounded-xl border border-border/50 bg-card p-4 flex items-center gap-3">
+            <div key={stat.label} className="rounded-xl border border-border/50 bg-card p-4 flex items-center gap-3 hover:shadow-md hover:border-primary/20 transition-all">
               <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">{stat.icon}</div>
               <div>
                 <p className="text-xl font-bold text-foreground">{stat.value}</p>

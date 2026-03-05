@@ -13,10 +13,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen flex">
       {/* Left: Branding — hidden on mobile */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-card border-r border-border">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-card border-r border-border/40">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-card to-secondary/8" />
-        <div className="absolute top-[-100px] right-[-100px] w-[400px] h-[400px] rounded-full bg-primary/10 blur-[80px]" />
-        <div className="absolute bottom-[-100px] left-[-100px] w-[400px] h-[400px] rounded-full bg-secondary/10 blur-[80px]" />
+        <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] rounded-full bg-primary/8 blur-[100px]" />
+        <div className="absolute bottom-[-100px] left-[-100px] w-[500px] h-[500px] rounded-full bg-secondary/8 blur-[100px]" />
 
         <div className="relative z-10 flex flex-col justify-center p-14 w-full">
           <Link href="/" className="flex items-center gap-2 font-display font-extrabold text-xl gradient-text mb-12">

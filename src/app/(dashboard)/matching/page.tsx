@@ -66,16 +66,16 @@ export default function MatchingPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-8 pb-10">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-display flex items-center gap-2">
             <Heart className="w-6 h-6 text-primary" /> Find Partners
           </h1>
-          <p className="text-sm text-muted-foreground">Swipe through compatible study buddies</p>
+          <p className="text-sm text-muted-foreground mt-1 whitespace-nowrap">Swipe through compatible study buddies</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <Link href="/matching/preferences">
             <Button variant="outline" size="sm" className="rounded-xl gap-1.5">
               <Settings className="w-4 h-4" /> Preferences
@@ -90,7 +90,9 @@ export default function MatchingPage() {
       </div>
 
       {/* Swipe Stack */}
-      <SwipeStack candidates={candidates} />
+      <div className="max-w-sm mx-auto sm:max-w-md pt-4">
+        <SwipeStack candidates={candidates} />
+      </div>
     </div>
   )
 }

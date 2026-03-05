@@ -252,7 +252,7 @@ export function UploadForm({ onSuccess }: UploadFormProps) {
               value={subject}
               onChange={e => setSubject(e.target.value)}
               disabled={submitting}
-              className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+              className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all dark:bg-card dark:[color-scheme:dark]"
             >
               <option value="">Select a subject...</option>
               {PREDEFINED_SUBJECTS.map(s => (

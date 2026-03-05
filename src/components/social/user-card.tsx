@@ -30,7 +30,7 @@ export function UserCard({ user, currentUserId }: UserCardProps) {
   const avatarUrl = user.avatar || user.image;
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
+    <div className="bg-card border border-border/60 rounded-2xl p-5 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group hover:-translate-y-0.5">
       <div className="flex items-start gap-4">
         {/* Avatar */}
         <Link href={`/profile/${user.username || user.id}`} className="flex-shrink-0">

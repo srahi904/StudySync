@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main
         className={cn(
           'transition-all duration-300 pt-0',
-          isFullHeightRoute ? 'px-0 pb-0' : 'px-4 md:px-6 lg:px-8 pb-20 lg:pb-8',
+          isFullHeightRoute ? 'px-0 pb-0' : 'px-3 sm:px-4 md:px-6 lg:px-8 pb-20 lg:pb-8',
           collapsed ? 'lg:ml-[var(--sidebar-collapsed)]' : 'lg:ml-[var(--sidebar-width)]'
         )}
       >
@@ -61,8 +61,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           className={cn(
             'w-full',
             isFullHeightRoute
-              ? 'h-[calc(100vh-var(--header-height))] p-0'
-              : 'max-w-7xl mx-auto py-6'
+              ? 'h-[calc(100dvh-var(--header-height))] overflow-hidden p-0'
+              : 'max-w-7xl mx-auto py-4 sm:py-6'
           )}
         >
           {children}

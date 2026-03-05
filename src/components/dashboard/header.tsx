@@ -44,7 +44,7 @@ export function Header({ collapsed, onMenuClick }: HeaderProps) {
   return (
     <header
       className={cn(
-        'sticky top-2 z-40 mx-4 md:mx-6 mb-4 h-16 rounded-2xl glass-panel flex items-center px-4 md:px-6 gap-4 transition-all duration-300',
+        'sticky top-2 z-40 mx-3 sm:mx-4 md:mx-6 mb-4 h-14 sm:h-16 rounded-2xl glass-panel flex items-center px-3 sm:px-4 md:px-6 gap-3 sm:gap-4 transition-all duration-300',
         collapsed ? 'lg:ml-[calc(var(--sidebar-collapsed)+1rem)]' : 'lg:ml-[calc(var(--sidebar-width)+1rem)]'
       )}
     >

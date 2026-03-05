@@ -230,7 +230,7 @@ export default function ExplorePage() {
                 <Link
                   key={material.id}
                   href={`/materials/${material.slug || material.id}`}
-                  className="bg-card border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group"
+                  className="bg-card border border-border/60 rounded-2xl p-5 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group hover:-translate-y-0.5"
                 >
                   {/* Material type badge */}
                   <div className="flex items-center justify-between mb-3">

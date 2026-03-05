@@ -19,6 +19,7 @@
   --animate-float: float 4s ease-in-out infinite;
   --animate-pulse-dot: pulseDot 2s infinite;
   --animate-glow: glowPulse 2.5s ease-in-out infinite alternate;
+  --animate-shimmer: shimmer 2s linear infinite;
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(24px); }
@@ -35,6 +36,10 @@
   @keyframes glowPulse {
     from { box-shadow: 0 0 10px -5px hsl(var(--primary) / 0.3); }
     to { box-shadow: 0 0 20px 0px hsl(var(--primary) / 0.5); }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
 }
 
@@ -71,56 +76,69 @@
   --chart-5: 27 87% 67%;
 }
 
+/* ═══ LIGHT THEME — Warm, Inviting, Professional ═══ */
 .light {
-  --background: 220 20% 98%;
-  --foreground: 222 47% 8%;
+  --background: 225 25% 97%;
+  --foreground: 224 40% 12%;
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 8%;
-  --primary: 221 83% 53%; /* Vivid Blue */
-  --primary-foreground: 210 40% 98%;
-  --secondary: 262 83% 58%; /* Purple */
-  --secondary-foreground: 210 40% 98%;
-  --muted: 220 15% 94%;
-  --muted-foreground: 215 16% 47%;
-  --accent: 262 70% 58%;
-  --accent-foreground: 210 40% 98%;
-  --border: 214 32% 90%;
-  --input: 214 32% 90%;
-  --ring: 221 83% 53%;
+  --card-foreground: 224 40% 12%;
+  --primary: 234 89% 58%;       /* Rich indigo-blue */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 270 76% 58%;     /* Vibrant purple */
+  --secondary-foreground: 0 0% 100%;
+  --muted: 225 20% 93%;
+  --muted-foreground: 223 12% 48%;
+  --accent: 270 60% 55%;
+  --accent-foreground: 0 0% 100%;
+  --border: 225 20% 90%;
+  --input: 225 20% 90%;
+  --ring: 234 89% 58%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 40% 12%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --chart-1: 234 89% 58%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 43 74% 66%;
+  --chart-4: 270 65% 60%;
+  --chart-5: 340 75% 55%;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  --shadow-elevated: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
 }
 
+/* ═══ DARK THEME — Rich Navy, Premium Feel ═══ */
 .dark {
-  /* True Deep Premium OLED Black */
-  --background: 0 0% 2%;
-  --foreground: 0 0% 96%;
-  /* Slightly elevated card layer */
-  --card: 0 0% 5%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 5%;
-  --popover-foreground: 0 0% 98%;
-  /* High contrast vibrant primary */
-  --primary: 217 91% 60%; /* Intense Blue */
+  --background: 228 24% 6%;       /* Deep navy-charcoal, not pure black */
+  --foreground: 220 20% 94%;
+  --card: 228 22% 9%;             /* Elevated dark surface */
+  --card-foreground: 220 20% 96%;
+  --popover: 228 22% 9%;
+  --popover-foreground: 220 20% 96%;
+  --primary: 230 90% 66%;         /* Bright electric blue */
   --primary-foreground: 0 0% 100%;
-  --secondary: 267 100% 64%; /* Vibrant Purple */
+  --secondary: 270 85% 65%;       /* Vivid purple */
   --secondary-foreground: 0 0% 100%;
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 60%;
-  --accent: 217 91% 60%;
+  --muted: 228 18% 14%;
+  --muted-foreground: 225 12% 55%;
+  --accent: 230 90% 66%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
+  --destructive: 0 72% 55%;
   --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 12%;
-  --input: 0 0% 12%;
-  --ring: 217 91% 60%;
-  --chart-1: 220 70% 50%;
+  --border: 228 16% 16%;
+  --input: 228 16% 16%;
+  --ring: 230 90% 66%;
+  --chart-1: 230 80% 60%;
   --chart-2: 160 60% 45%;
   --chart-3: 30 80% 55%;
   --chart-4: 280 65% 60%;
   --chart-5: 340 75% 55%;
 
-  /* Premium Coloured Shadows */
-  --shadow-primary: 0 8px 32px hsl(217 91% 60% / 0.15);
-  --shadow-secondary: 0 8px 32px hsl(267 100% 64% / 0.15);
+  /* Premium colored shadows */
+  --shadow-primary: 0 8px 32px hsl(230 90% 66% / 0.12);
+  --shadow-secondary: 0 8px 32px hsl(270 85% 65% / 0.12);
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.3), 0 0 1px rgba(255,255,255,0.05);
+  --shadow-elevated: 0 8px 32px rgba(0,0,0,0.4), 0 0 1px rgba(255,255,255,0.06);
   --shadow-emerald: 0 8px 32px hsl(160 60% 45% / 0.15);
   --shadow-rose: 0 8px 32px hsl(340 75% 55% / 0.15);
   --shadow-amber: 0 8px 32px hsl(30 80% 55% / 0.15);
@@ -151,21 +169,30 @@ body {
 
 /* Premium Glassmorphism */
 @utility glass {
-  background-color: hsl(var(--card) / 0.5);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background-color: hsl(var(--card) / 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid hsl(var(--border) / 0.5);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
 }
 
 @utility glass-panel {
-  background: linear-gradient(135deg, hsl(var(--card) / 0.6) 0%, hsl(var(--card) / 0.3) 100%);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid hsl(var(--border) / 0.4);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, hsl(var(--card) / 0.7) 0%, hsl(var(--card) / 0.4) 100%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid hsl(var(--border) / 0.5);
+  box-shadow: var(--shadow-card, 0 4px 16px rgba(0, 0, 0, 0.08));
 }
 
+/* Elevated glow card */
+@utility glow-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-card, 0 2px 8px rgba(0,0,0,0.06));
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Sidebar */
 @utility sidebar-item {
   display: flex;
   align-items: center;
@@ -174,16 +201,23 @@ body {
   padding: 0.625rem 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: all 200ms;
+  transition: all 200ms ease;
 }
 
 @utility sidebar-item-active {
-  background-color: hsl(var(--primary) / 0.1);
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.18), hsl(var(--secondary) / 0.12));
   color: hsl(var(--primary));
+  font-weight: 700;
+  border-left: 3px solid hsl(var(--primary));
+  padding-left: calc(0.75rem - 3px);
 }
 
 @utility sidebar-item-inactive {
   color: hsl(var(--muted-foreground));
+  &:hover {
+    color: hsl(var(--foreground));
+    background: hsl(var(--muted) / 0.5);
+  }
 }
 
 @utility sidebar-item-disabled {
@@ -203,10 +237,10 @@ body {
 }
 
 /* ═══ SCROLLBAR ═══ */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
 
 /* ═══ SAFE AREA / MOBILE ═══ */
 @utility safe-area-bottom {
@@ -220,3 +254,37 @@ body {
     display: none;
   }
 }
+
+/* ═══ NATIVE FORM ELEMENTS — DARK MODE FIX ═══ */
+/* Without this, native <select> and <option> use the browser's
+   OS-level popup with a white background even in dark mode */
+
+select {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+select option {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+.dark select {
+  color-scheme: dark;
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+.dark select option {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+/* Ensure text-areas inherit theme */
+textarea {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+

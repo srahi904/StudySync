@@ -94,7 +94,7 @@ export default function MaterialsPage() {
             </span>
           )}
         </button>
-        <div className="flex items-center border border-border rounded-xl overflow-hidden">
+        <div className="flex items-center border border-border/50 rounded-xl overflow-hidden">
           <button
             onClick={() => setView('grid')}
             className={cn('p-2 transition-colors', view === 'grid' ? 'bg-primary text-white' : 'hover:bg-muted text-muted-foreground')}
@@ -163,7 +163,7 @@ export default function MaterialsPage() {
             <div className="space-y-2">
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-20 rounded-xl bg-muted/30 animate-pulse border border-border" />
+                  <div key={i} className="h-20 rounded-xl bg-muted/20 animate-pulse border border-border/40" />
                 ))
               ) : materials.length === 0 ? (
                 <div className="text-center py-16 text-muted-foreground">No materials found</div>

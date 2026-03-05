@@ -83,8 +83,32 @@ const nextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
         ],
       },
-      // Note: Removed global /api caching to prevent stale auth/upload state. 
-      // Targeted caching is handled via Redis.
+      // Cache static assets aggressively
+      {
+        source: '/fonts/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      // Short browser cache for read-heavy API endpoints
+      {
+        source: '/api/explore/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'private, max-age=30, stale-while-revalidate=60' },
+        ],
+      },
+      {
+        source: '/api/groups/discover',
+        headers: [
+          { key: 'Cache-Control', value: 'private, max-age=60, stale-while-revalidate=120' },
+        ],
+      },
     ];
   },
 };

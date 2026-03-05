@@ -110,10 +110,10 @@ export function PreferencesForm({ onSaved }: PreferencesFormProps) {
               key={sub}
               onClick={() => toggle(subjects, sub, setSubjects)}
               className={cn(
-                'text-xs px-3 py-1.5 rounded-full border transition-all',
+                'text-xs px-3 py-1.5 rounded-full border font-semibold transition-all duration-200',
                 subjects.includes(sub)
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-muted/30 text-muted-foreground border-border hover:border-primary/40'
+                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/40 scale-[1.05]'
+                  : 'bg-muted/40 text-foreground/60 border-border/50 hover:border-emerald-400/50 hover:text-emerald-500'
               )}
             >
               {sub}
@@ -133,10 +133,10 @@ export function PreferencesForm({ onSaved }: PreferencesFormProps) {
               key={time}
               onClick={() => toggle(studyTimes, time, setStudyTimes)}
               className={cn(
-                'text-xs px-3 py-1.5 rounded-full border capitalize transition-all',
+                'text-xs px-3 py-1.5 rounded-full border capitalize font-semibold transition-all duration-200',
                 studyTimes.includes(time)
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-muted/30 text-muted-foreground border-border hover:border-primary/40'
+                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/40 scale-[1.05]'
+                  : 'bg-muted/40 text-foreground/60 border-border/50 hover:border-emerald-400/50 hover:text-emerald-500'
               )}
             >
               {time}
@@ -156,10 +156,10 @@ export function PreferencesForm({ onSaved }: PreferencesFormProps) {
               key={goal}
               onClick={() => toggle(goals, goal, setGoals)}
               className={cn(
-                'text-xs px-3 py-1.5 rounded-full border transition-all',
+                'text-xs px-3 py-1.5 rounded-full border font-semibold transition-all duration-200',
                 goals.includes(goal)
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-muted/30 text-muted-foreground border-border hover:border-primary/40'
+                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/40 scale-[1.05]'
+                  : 'bg-muted/40 text-foreground/60 border-border/50 hover:border-emerald-400/50 hover:text-emerald-500'
               )}
             >
               {goal}
@@ -179,10 +179,10 @@ export function PreferencesForm({ onSaved }: PreferencesFormProps) {
               key={style.value}
               onClick={() => setLearningStyle(style.value)}
               className={cn(
-                'text-left p-3 rounded-xl border transition-all',
+                'text-left p-3 rounded-xl border transition-all duration-200',
                 learningStyle === style.value
-                  ? 'bg-primary/10 border-primary text-foreground'
-                  : 'bg-muted/20 border-border text-muted-foreground hover:border-primary/40'
+                  ? 'bg-emerald-500/15 border-emerald-500 text-foreground shadow-sm shadow-emerald-500/20 ring-1 ring-emerald-500/40'
+                  : 'bg-muted/30 border-border/50 text-foreground/60 hover:border-emerald-400/40 hover:text-foreground'
               )}
             >
               <p className="text-sm font-medium">{style.label}</p>
@@ -203,10 +203,10 @@ export function PreferencesForm({ onSaved }: PreferencesFormProps) {
               key={day}
               onClick={() => toggle(availableDays, day, setAvailableDays)}
               className={cn(
-                'text-xs px-3 py-1.5 rounded-full border capitalize transition-all',
+                'text-xs px-3 py-1.5 rounded-full border capitalize font-semibold transition-all duration-200',
                 availableDays.includes(day)
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-muted/30 text-muted-foreground border-border hover:border-primary/40'
+                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/40 scale-[1.05]'
+                  : 'bg-muted/40 text-foreground/60 border-border/50 hover:border-emerald-400/50 hover:text-emerald-500'
               )}
             >
               {day.slice(0, 3)}
@@ -224,10 +224,10 @@ export function PreferencesForm({ onSaved }: PreferencesFormProps) {
               key={item}
               onClick={() => toggle(lookingFor, item, setLookingFor)}
               className={cn(
-                'text-xs px-3 py-1.5 rounded-full border capitalize transition-all',
+                'text-xs px-3 py-1.5 rounded-full border capitalize font-semibold transition-all duration-200',
                 lookingFor.includes(item)
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-muted/30 text-muted-foreground border-border hover:border-primary/40'
+                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/40 scale-[1.05]'
+                  : 'bg-muted/40 text-foreground/60 border-border/50 hover:border-emerald-400/50 hover:text-emerald-500'
               )}
             >
               {item.replace(/-/g, ' ')}
