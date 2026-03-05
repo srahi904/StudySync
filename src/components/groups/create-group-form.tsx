@@ -49,7 +49,7 @@ export function CreateGroupForm() {
       const result = await res.json()
       if (result.success) {
         toast({ title: 'Group created!' })
-        router.push(`/groups/${result.data.id}`)
+        router.push(`/groups/${result.data.slug || result.data.id}`)
       } else {
         toast({ title: result.message || 'Failed to create group', variant: "destructive" })
       }

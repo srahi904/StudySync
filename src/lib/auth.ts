@@ -107,12 +107,14 @@ export const authOptions: NextAuthOptions = {
         token.profileCompleted = user.profileCompleted
       }
 
-      // Handle session updates (e.g. after onboarding)
+      // Handle session updates (e.g. after onboarding or profile edit)
       if (trigger === 'update' && session) {
         token.onboarded = session.onboarded ?? token.onboarded
         token.emailVerified = session.emailVerified ?? token.emailVerified
         token.avatar = session.avatar ?? token.avatar
         token.profileCompleted = session.profileCompleted ?? token.profileCompleted
+        if (session.username !== undefined) token.username = session.username
+        if (session.name !== undefined) token.name = session.name
       }
 
       return token

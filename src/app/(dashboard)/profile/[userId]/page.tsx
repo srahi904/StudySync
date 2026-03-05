@@ -46,6 +46,7 @@ interface UserProfile {
 
 interface Material {
   id: string;
+  slug?: string | null;
   title: string;
   description?: string | null;
   type: string;
@@ -313,7 +314,7 @@ export default function UserProfilePage() {
             {materials.map((material) => (
               <Link
                 key={material.id}
-                href={`/materials/${material.id}`}
+                href={`/materials/${material.slug || material.id}`}
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors border border-transparent hover:border-border group"
               >
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">

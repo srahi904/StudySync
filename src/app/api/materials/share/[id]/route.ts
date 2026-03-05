@@ -2,16 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveMaterialId } from '@/lib/resolvers'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
 export async function POST(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await context.params
+    const params = await context.params
+    const resolvedId = await resolveMaterialId(params.id)
+    if (!resolvedId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     
-    const material = await prisma.material.findUnique({ where: { id } })
+    const material = await prisma.material.findUnique({ where: { id: resolvedId } })
     if (!material) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     if (material.userId !== session.user.id && session.user.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     if (material.visibility !== 'PRIVATE') {
@@ -25,7 +29,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const share = await prisma.materialShare.upsert({
       where: {
         materialId_sharedWithUserId: {
-          materialId: id,
+          materialId: resolvedId,
           sharedWithUserId: userId
         }
       },
@@ -35,7 +39,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
         expiresAt: expiresAt ? new Date(expiresAt) : null
       },
       create: {
-        materialId: id,
+        materialId: resolvedId,
         sharedWithUserId: userId,
         sharedByUserId: session.user.id,
         canDownload,
@@ -56,11 +60,14 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
 export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await context.params
+    const params = await context.params
+    const resolvedId = await resolveMaterialId(params.id)
+    if (!resolvedId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     
-    const material = await prisma.material.findUnique({ where: { id } })
+    const material = await prisma.material.findUnique({ where: { id: resolvedId } })
     if (!material) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     if (material.userId !== session.user.id && session.user.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     
@@ -70,7 +77,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     await prisma.materialShare.delete({
       where: {
         materialId_sharedWithUserId: {
-          materialId: id,
+          materialId: resolvedId,
           sharedWithUserId: userId
         }
       }
@@ -85,12 +92,15 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
 
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await context.params
+    const params = await context.params
+    const resolvedId = await resolveMaterialId(params.id)
+    if (!resolvedId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     
     const material = await prisma.material.findUnique({
-      where: { id },
+      where: { id: resolvedId },
       include: {
         sharedWith: {
           include: {

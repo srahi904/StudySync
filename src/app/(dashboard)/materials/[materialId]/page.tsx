@@ -70,9 +70,9 @@ export default function MaterialDetailPage() {
     if (materialId) fetchMaterial()
   }, [materialId, router])
 
-  // Real-time subscriptions
+  // Real-time subscriptions using the resolved database ID
   usePusherMulti({
-    channelName: typeof materialId === 'string' ? CHANNELS.material(materialId) : '',
+    channelName: material?.id ? CHANNELS.material(material.id) : '',
     events: {
       [EVENTS.NEW_MATERIAL_COMMENT]: (data: any) => {
         setComments(prev => {
@@ -83,12 +83,12 @@ export default function MaterialDetailPage() {
         setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
       },
       [EVENTS.MATERIAL_LIKES_UPDATED]: (data: any) => {
-        if (data.materialId === materialId) {
+        if (data.materialId === material?.id) {
           setLikesCount(data.likesCount)
         }
       }
     },
-    enabled: !!materialId
+    enabled: !!material?.id
   })
 
   if (loading) {
@@ -121,7 +121,7 @@ export default function MaterialDetailPage() {
     setLikesCount(prev => hasLiked ? Math.max(0, prev - 1) : prev + 1)
 
     try {
-      const res = await fetch(`/api/materials/${materialId}/like`, { method: 'POST' })
+      const res = await fetch(`/api/materials/${material.id}/like`, { method: 'POST' })
       if (!res.ok) throw new Error('Failed to like')
       const data = await res.json()
       setHasLiked(data.data.hasLiked)
@@ -140,7 +140,7 @@ export default function MaterialDetailPage() {
 
     setIsSubmittingComment(true)
     try {
-      const res = await fetch(`/api/materials/${materialId}/comments`, {
+      const res = await fetch(`/api/materials/${material.id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: commentInput }),
@@ -155,7 +155,7 @@ export default function MaterialDetailPage() {
   }
 
   const handleDelete = async () => {
-    const res = await fetch(`/api/materials/${materialId}`, { method: 'DELETE' })
+    const res = await fetch(`/api/materials/${material.id}`, { method: 'DELETE' })
     if (res.ok) {
       toast({ title: 'Material deleted' })
       router.push('/materials')
@@ -166,7 +166,7 @@ export default function MaterialDetailPage() {
 
   const handleDownload = async () => {
     if (!isFollowingOrOwner) return
-    await fetch(`/api/materials/analytics/${materialId}`, {
+    await fetch(`/api/materials/analytics/${material.id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'download' }),
@@ -226,7 +226,7 @@ export default function MaterialDetailPage() {
           {isOwner && (
             <div className="absolute top-4 right-4 bg-background/80 backdrop-blur border border-border px-2 py-1.5 rounded-lg flex items-center gap-1 shadow-sm">
               <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                <Link href={`/materials/${materialId}/edit`}>
+                <Link href={`/materials/${material.id}/edit`}>
                   <Edit2 className="w-4 h-4" />
                 </Link>
               </Button>
@@ -421,7 +421,7 @@ export default function MaterialDetailPage() {
       />
       
       <ShareModal
-        materialId={materialId as string}
+        materialId={material.id}
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
       />

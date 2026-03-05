@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
+import { useSession } from 'next-auth/react'
 import { Camera, Loader2, User, AtSign, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -26,6 +27,7 @@ interface EditProfileModalProps {
 export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
   const router = useRouter()
   const { toast } = useToast()
+  const { update } = useSession()
   
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -108,9 +110,26 @@ export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
         description: 'Your changes have been saved successfully.'
       })
       
+      // Update local NextAuth session to reflect the new username/name/avatar
+      try {
+        await update({ 
+          username: data.user.username,
+          name: data.user.name,
+          avatar: data.user.avatar || data.user.image 
+        })
+      } catch (sessionErr) {
+        console.error('Failed to update session', sessionErr)
+      }
+
       onUpdate(data.user)
       setOpen(false)
-      router.refresh()
+      
+      // Navigate to new URL if username was added or changed
+      if (data.user.username && data.user.username !== user.username) {
+        router.push(`/profile/${data.user.username}`)
+      } else {
+        router.refresh()
+      }
     } catch (err: any) {
       toast({
         title: 'Error',
@@ -203,12 +222,17 @@ export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
                   </div>
                 </div>
                 {isUsernameLocked ? (
-                  <p className="text-[10px] text-amber-500 font-medium">
-                    ⚠ Locked until {new Date(new Date(user.usernameUpdatedAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
-                  </p>
+                  <div className="bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg mt-2">
+                    <p className="text-xs text-amber-500 font-medium flex items-center gap-1.5">
+                      ⚠ Username Locked
+                    </p>
+                    <p className="text-[10px] text-amber-500/90 mt-0.5">
+                      You can only change your username once every 30 days. It will be unlocked on {new Date(new Date(user.usernameUpdatedAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}.
+                    </p>
+                  </div>
                 ) : (
-                  <p className="text-[10px] text-muted-foreground font-medium">
-                    At least 5 characters. Can be changed once every 30 days.
+                  <p className="text-[10px] text-muted-foreground font-medium mt-1">
+                    At least 5 characters. <strong className="text-foreground">Note:</strong> Can only be changed once every 30 days.
                   </p>
                 )}
               </div>

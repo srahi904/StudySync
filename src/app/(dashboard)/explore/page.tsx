@@ -30,6 +30,7 @@ interface ExploreUser {
 
 interface ExploreMaterial {
   id: string;
+  slug?: string | null;
   title: string;
   description?: string | null;
   type: string;
@@ -228,7 +229,7 @@ export default function ExplorePage() {
               {materials.map((material) => (
                 <Link
                   key={material.id}
-                  href={`/materials/${material.id}`}
+                  href={`/materials/${material.slug || material.id}`}
                   className="bg-card border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group"
                 >
                   {/* Material type badge */}

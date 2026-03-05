@@ -13,7 +13,8 @@ import { PrivacyBadge } from './privacy-badge'
 type MaterialWithUser = Material & { 
   user?: Pick<User, 'id' | 'name' | 'avatar' | 'image'>,
   sharedWith?: any[],
-  visibility?: 'PUBLIC' | 'PRIVATE' | 'GROUP_ONLY'
+  visibility?: 'PUBLIC' | 'PRIVATE' | 'GROUP_ONLY',
+  slug?: string | null
 }
 
 interface MaterialCardProps {
@@ -75,7 +76,7 @@ export function MaterialCard({ material, currentUserId, onDelete, showStatus = f
       className
     )}>
       {/* Preview Area */}
-      <Link href={`/materials/${material.id}`}>
+      <Link href={`/materials/${material.slug || material.id}`}>
         <div className={cn(
           'h-44 bg-gradient-to-br flex items-center justify-center relative',
           TYPE_PREVIEW_COLORS[material.type]
@@ -115,14 +116,14 @@ export function MaterialCard({ material, currentUserId, onDelete, showStatus = f
               {menuOpen && (
                 <div className="absolute right-0 top-8 w-40 bg-card border border-border rounded-xl shadow-xl z-10 overflow-hidden">
                   <Link
-                    href={`/materials/${material.id}/edit`}
+                    href={`/materials/${material.slug || material.id}/edit`}
                     className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
                     onClick={() => setMenuOpen(false)}
                   >
                     <Edit className="w-3.5 h-3.5" /> Edit
                   </Link>
                   <Link
-                    href={`/materials/${material.id}/view`}
+                    href={`/materials/${material.slug || material.id}/view`}
                     className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
                     onClick={() => setMenuOpen(false)}
                   >
@@ -160,7 +161,7 @@ export function MaterialCard({ material, currentUserId, onDelete, showStatus = f
         </div>
 
         {/* Title */}
-        <Link href={`/materials/${material.id}`}>
+        <Link href={`/materials/${material.slug || material.id}`}>
           <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors leading-snug">
             {material.title}
           </h3>

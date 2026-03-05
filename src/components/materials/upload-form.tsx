@@ -10,7 +10,7 @@ import { FileUploader } from './file-uploader'
 import { UploadProgress } from './upload-progress'
 import { cn } from '@/lib/utils'
 import { getMaterialTypeFromMime, PREDEFINED_SUBJECTS } from '@/lib/materials/material-utils'
-import { Globe, Lock, Tag, X, Plus, BookOpen, FileText, Users } from 'lucide-react'
+import { Globe, Lock, Tag, X, Plus, BookOpen, FileText, Users, Sparkles, Loader2 } from 'lucide-react'
 
 const MAX_TAGS = 10
 const MAX_TITLE = 200
@@ -37,6 +37,7 @@ export function UploadForm({ onSuccess }: UploadFormProps) {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [generatingAi, setGeneratingAi] = useState(false)
 
   // Auto-fill title from filename
   useEffect(() => {
@@ -69,6 +70,31 @@ export function UploadForm({ onSuccess }: UploadFormProps) {
   const finalSubject = subject === 'Other' ? customSubject : subject
 
   const isValid = file && title.trim().length >= 3 && finalSubject.trim()
+
+  const handleGenerateDescription = async () => {
+    if (!title || title.trim().length < 3) {
+      toast({ title: 'Please enter a valid title first', variant: 'destructive' })
+      return
+    }
+
+    setGeneratingAi(true)
+    try {
+      const res = await fetch('/api/ai/generate-description', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, subject: finalSubject, existingDescription: description }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate')
+      
+      setDescription(data.description)
+      toast({ title: '✨ Description generated!' })
+    } catch (err: any) {
+      toast({ title: 'AI Generation Failed', description: err.message, variant: 'destructive' })
+    } finally {
+      setGeneratingAi(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -127,11 +153,14 @@ export function UploadForm({ onSuccess }: UploadFormProps) {
       setUploadStatus('success')
       toast({ title: '🎉 Material uploaded!', description: 'Your study material has been uploaded successfully.' })
 
+      // Auto-trigger background AI processing
+      fetch(`/api/materials/process/${created.data.id}`, { method: 'POST' }).catch(console.error)
+
       setTimeout(() => {
         if (onSuccess) {
           onSuccess(created.data.id)
         } else {
-          router.push(`/materials/${created.data.id}`)
+          router.push(`/materials/${created.data.slug || created.data.id}`)
         }
       }, 1200)
 
@@ -188,7 +217,20 @@ export function UploadForm({ onSuccess }: UploadFormProps) {
           {/* Description */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="description">Description</Label>
+              <div className="flex items-center gap-3">
+                <Label htmlFor="description">Description</Label>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleGenerateDescription}
+                  disabled={submitting || generatingAi || !title.trim()}
+                  className="h-7 text-xs gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border-0"
+                >
+                  {generatingAi ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                  Generate AI Description
+                </Button>
+              </div>
               <span className="text-xs text-muted-foreground">{description.length}/{MAX_DESC}</span>
             </div>
             <textarea

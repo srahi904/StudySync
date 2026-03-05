@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 
 interface TrendingMaterial {
   id: string
+  slug?: string | null
   title: string
   subject: string | null
   type: string
@@ -59,7 +60,7 @@ export function TrendingMaterials() {
         {materials.map((material, index) => (
           <Link
             key={material.id}
-            href={`/materials/${material.id}`}
+            href={`/materials/${material.slug || material.id}`}
             className={cn(
               'group flex items-center gap-3 p-3 rounded-xl border border-border bg-card',
               'hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all'

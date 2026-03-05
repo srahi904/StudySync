@@ -36,23 +36,23 @@ export default function GroupDetailPage() {
     setLoading(false)
   }
 
-  const fetchMaterials = async () => {
-    const res = await fetch(`/api/groups/${groupId}/materials`)
+  const fetchMaterials = async (resolvedId: string = groupId) => {
+    const res = await fetch(`/api/groups/${resolvedId}/materials`)
     const data = await res.json()
     if (data.success) setMaterials(data.data)
   }
 
-  const fetchRequests = async () => {
+  const fetchRequests = async (resolvedId: string = groupId) => {
     if (!group?.myMembership || !['OWNER', 'ADMIN'].includes(group.myMembership.role)) return
-    const res = await fetch(`/api/groups/${groupId}/requests`)
+    const res = await fetch(`/api/groups/${resolvedId}/requests`)
     const data = await res.json()
     if (data.success) setRequests(data.data)
   }
 
   useEffect(() => { fetchGroup() }, [groupId])
-  useEffect(() => { if (group?.myMembership) { fetchMaterials(); fetchRequests() } }, [group])
+  useEffect(() => { if (group?.myMembership) { fetchMaterials(group.id); fetchRequests(group.id) } }, [group])
 
-  const { members, loading: membersLoading, refetch: refetchMembers } = useGroupMembers(groupId, session)
+  const { members, loading: membersLoading, refetch: refetchMembers } = useGroupMembers(group?.id || groupId, session)
 
   const handleJoin = async () => {
     setJoining(true)
@@ -94,7 +94,7 @@ export default function GroupDetailPage() {
             <>
               {tab === 'chat' && (
                 <GroupChat
-                  groupId={groupId}
+                  groupId={group.id}
                   currentUserId={userId}
                   currentUserName={session?.user?.name ?? ''}
                   currentUserAvatar={session?.user?.image ?? ''}
@@ -116,8 +116,8 @@ export default function GroupDetailPage() {
                     materials={materials}
                     currentUserId={userId}
                     canManage={isAdmin}
-                    groupId={groupId}
-                    onRefresh={fetchMaterials}
+                    groupId={group.id}
+                    onRefresh={() => fetchMaterials(group.id)}
                   />
                 </div>
               )}
@@ -127,7 +127,7 @@ export default function GroupDetailPage() {
                     members={members}
                     currentUserId={userId}
                     currentUserRole={myRole}
-                    groupId={groupId}
+                    groupId={group.id}
                     onRefresh={refetchMembers}
                   />
                 )
@@ -153,7 +153,7 @@ export default function GroupDetailPage() {
                 </div>
               )}
               {tab === 'requests' && isAdmin && (
-                <JoinRequestList requests={requests} groupId={groupId} onRefresh={() => { fetchRequests(); fetchGroup() }} />
+                <JoinRequestList requests={requests} groupId={group.id} onRefresh={() => { fetchRequests(group.id); fetchGroup() }} />
               )}
             </>
           )}
@@ -166,8 +166,8 @@ export default function GroupDetailPage() {
         </div>
       )}
 
-      {showShareModal && <MaterialShareModal groupId={groupId} onClose={() => setShowShareModal(false)} onShared={fetchMaterials} />}
-      {showInviteModal && <InviteModal groupId={groupId} onClose={() => setShowInviteModal(false)} />}
+      {showShareModal && <MaterialShareModal groupId={group.id} onClose={() => setShowShareModal(false)} onShared={() => fetchMaterials(group.id)} />}
+      {showInviteModal && <InviteModal groupId={group.id} onClose={() => setShowInviteModal(false)} />}
     </div>
   )
 }

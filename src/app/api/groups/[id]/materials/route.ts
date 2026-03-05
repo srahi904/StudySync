@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveGroupId } from '@/lib/resolvers'
 import { checkGroupPermissions } from '@/lib/groups/permissions'
 import { notifyGroupMembers } from '@/lib/groups/notifications'
 import { triggerPusherEvent } from '@/lib/pusher/server'
@@ -13,7 +14,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-    const { id: groupId } = await params
+    const { id: paramId } = await params
+    const groupId = await resolveGroupId(paramId)
+    if (!groupId) return NextResponse.json({ success: false, message: 'Group not found' }, { status: 404 })
+
     const userId = session.user.id
 
     const perms = await checkGroupPermissions(groupId, userId)
@@ -46,7 +50,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-    const { id: groupId } = await params
+    const { id: paramId } = await params
+    const groupId = await resolveGroupId(paramId)
+    if (!groupId) return NextResponse.json({ success: false, message: 'Group not found' }, { status: 404 })
+
     const userId = session.user.id
 
     const perms = await checkGroupPermissions(groupId, userId)

@@ -92,6 +92,7 @@ export async function GET(
       take: 20,
       select: {
         id: true,
+        slug: true,
         title: true,
         description: true,
         type: true,

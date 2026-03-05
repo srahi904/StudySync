@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { cache } from '@/lib/redis'
+import { resolveGroupId } from '@/lib/resolvers'
 import { checkGroupPermissions } from '@/lib/groups/permissions'
 import { UpdateGroupSchema } from '@/lib/validations'
 import { triggerPusherEvent } from '@/lib/pusher/server'
@@ -14,7 +15,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-    const { id } = await params
+    const { id: paramId } = await params
+    const id = await resolveGroupId(paramId)
+    if (!id) return NextResponse.json({ success: false, message: 'Group not found' }, { status: 404 })
+
     const userId = session.user.id
 
     const group = await cache.get(
@@ -61,7 +65,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-    const { id } = await params
+    const { id: paramId } = await params
+    const id = await resolveGroupId(paramId)
+    if (!id) return NextResponse.json({ success: false, message: 'Group not found' }, { status: 404 })
+
     const userId = session.user.id
 
     const perms = await checkGroupPermissions(id, userId)
@@ -93,7 +100,10 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-    const { id } = await params
+    const { id: paramId } = await params
+    const id = await resolveGroupId(paramId)
+    if (!id) return NextResponse.json({ success: false, message: 'Group not found' }, { status: 404 })
+
     const userId = session.user.id
 
     const perms = await checkGroupPermissions(id, userId)

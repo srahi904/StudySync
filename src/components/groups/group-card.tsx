@@ -20,10 +20,10 @@ interface GroupCardProps {
     materialCount: number
     maxMembers: number
     avatar?: string
-    creator: { id: string; name: string; avatar?: string }
     isMember?: boolean
     myRole?: string | null
     hasPendingRequest?: boolean
+    slug?: string | null
   }
   onJoin?: (groupId: string) => Promise<void>
   showActions?: boolean
@@ -43,7 +43,7 @@ export function GroupCard({ group, onJoin, showActions = true }: GroupCardProps)
   }
 
   return (
-    <Link href={`/groups/${group.id}`} className="group block">
+    <Link href={`/groups/${group.slug || group.id}`} className="group block">
       <div className="h-full rounded-xl border border-border/50 bg-card p-5 transition-all duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5">
         {/* Header */}
         <div className="flex items-start gap-3 mb-3">

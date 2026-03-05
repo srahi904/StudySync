@@ -6,6 +6,8 @@ import { prisma } from '@/lib/db'
 import { cache } from '@/lib/redis'
 import { CreateGroupSchema } from '@/lib/validations'
 import { redis } from '@/lib/redis'
+import { generateSlug } from '@/lib/utils'
+import { Prisma } from '@prisma/client'
 
 // ── GET: My groups ──────────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -78,25 +80,44 @@ export async function POST(req: NextRequest) {
     }
 
     // Create group + add creator as OWNER in a transaction
-    const group = await prisma.$transaction(async (tx) => {
-      const newGroup = await tx.studyGroup.create({
-        data: {
-          name,
-          description,
-          subject,
-          tags: tags ?? [],
-          privacy,
-          maxMembers,
-          creatorId: userId,
-          memberCount: 1,
-          settings: { allowInvites: true, allowMaterialSharing: true },
-        },
-      })
-      await tx.groupMember.create({
-        data: { groupId: newGroup.id, userId, role: 'OWNER' },
-      })
-      return newGroup
-    })
+    let group: Awaited<ReturnType<typeof prisma.studyGroup.create>> | null = null
+    let lastError: unknown = null
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        group = await prisma.$transaction(async (tx) => {
+          const newGroup = await tx.studyGroup.create({
+            data: {
+              name,
+              slug: generateSlug(name),
+              description,
+              subject,
+              tags: tags ?? [],
+              privacy,
+              maxMembers,
+              creatorId: userId,
+              memberCount: 1,
+              settings: { allowInvites: true, allowMaterialSharing: true },
+            },
+          })
+          await tx.groupMember.create({
+            data: { groupId: newGroup.id, userId, role: 'OWNER' },
+          })
+          return newGroup
+        })
+        break
+      } catch (error) {
+        lastError = error
+        const isSlugConflict =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002' &&
+          `${(error.meta as { target?: unknown } | undefined)?.target ?? ''}`.includes('slug')
+
+        if (!isSlugConflict || attempt === 2) throw error
+      }
+    }
+
+    if (!group) throw lastError ?? new Error('Failed to create group')
 
     // Invalidate the user's group list cache
     await cache.del(`user:${userId}:groups`)

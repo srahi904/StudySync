@@ -5,6 +5,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { cache } from '@/lib/redis'
 import { getMaterialTypeFromMime } from '@/lib/materials/material-utils'
+import { generateSlug } from '@/lib/utils'
+import { Prisma } from '@prisma/client'
 import { z } from 'zod'
 
 const createSchema = z.object({
@@ -74,20 +76,27 @@ export async function GET(req: NextRequest) {
       downloads: { downloadCount: 'desc' },
     }
 
-    const [materials, total] = await Promise.all([
-      prisma.material.findMany({
-        where,
-        include: {
-          user: {
-            select: { id: true, name: true, avatar: true, image: true }
-          }
-        },
-        orderBy: orderByMap[sortBy] ?? { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.material.count({ where }),
-    ])
+    const { materials, total } = await cache.get(
+      `materials:feed:v1:${userId || 'all'}:${session.user.id}:${page}:${limit}:${type || 'all'}:${subject || 'all'}:${status || 'all'}:${visibilityParam || 'all'}:${sortBy}:${sortOrder}:${tagsFilter.join('-')}:${search || 'none'}`,
+      async () => {
+        const [mats, tot] = await Promise.all([
+          prisma.material.findMany({
+            where,
+            include: {
+              user: {
+                select: { id: true, name: true, avatar: true, image: true }
+              }
+            },
+            orderBy: orderByMap[sortBy] ?? { createdAt: 'desc' },
+            skip,
+            take: limit,
+          }),
+          prisma.material.count({ where }),
+        ])
+        return { materials: mats, total: tot }
+      },
+      60 // 1 minute cache
+    )
 
     return NextResponse.json({
       success: true,
@@ -152,25 +161,44 @@ export async function POST(req: NextRequest) {
     const { title, description, subject, tags, visibility, fileUrl, fileName, fileSize, mimeType } = parsed.data
     const type = getMaterialTypeFromMime(mimeType)
 
-    const material = await prisma.material.create({
-      data: {
-        title,
-        description: description ?? null,
-        subject: subject || null,
-        tags,
-        visibility: visibility as 'PUBLIC' | 'PRIVATE' | 'GROUP_ONLY',
-        fileUrl,
-        fileName,
-        fileSize,
-        mimeType,
-        type,
-        userId,
-        status: 'PENDING',
-      },
-      include: {
-        user: { select: { id: true, name: true, avatar: true, image: true } }
+    let material: Awaited<ReturnType<typeof prisma.material.create>> | null = null
+    let lastError: unknown = null
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        material = await prisma.material.create({
+          data: {
+            title,
+            slug: generateSlug(title),
+            description: description ?? null,
+            subject: subject || null,
+            tags,
+            visibility: visibility as 'PUBLIC' | 'PRIVATE' | 'GROUP_ONLY',
+            fileUrl,
+            fileName,
+            fileSize,
+            mimeType,
+            type,
+            userId,
+            status: 'PENDING',
+          },
+          include: {
+            user: { select: { id: true, name: true, avatar: true, image: true } }
+          }
+        })
+        break
+      } catch (error) {
+        lastError = error
+        const isSlugConflict =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002' &&
+          `${(error.meta as { target?: unknown } | undefined)?.target ?? ''}`.includes('slug')
+
+        if (!isSlugConflict || attempt === 2) throw error
       }
-    })
+    }
+
+    if (!material) throw lastError ?? new Error('Failed to create material')
 
     // Invalidate dashboard count cache
     await cache.del(`user:${userId}:materials:count`)

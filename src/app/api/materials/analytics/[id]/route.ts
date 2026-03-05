@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveMaterialId } from '@/lib/resolvers'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -13,7 +14,10 @@ type RouteContext = { params: Promise<{ id: string }> }
 
 export async function POST(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await context.params
+    const params = await context.params
+    const resolvedId = await resolveMaterialId(params.id)
+    if (!resolvedId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -26,7 +30,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const { action } = parsed.data
 
     const material = await prisma.material.update({
-      where: { id },
+      where: { id: resolvedId },
       data: {
         ...(action === 'view' && { viewCount: { increment: 1 } }),
         ...(action === 'download' && { downloadCount: { increment: 1 } }),

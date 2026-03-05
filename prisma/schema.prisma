@@ -13,23 +13,23 @@ datasource db {
 // ============================================
 
 model User {
-  id                 String          @id @default(cuid())
+  id                 String    @id @default(cuid())
   name               String
-  username          String?   @unique
-  usernameUpdatedAt DateTime?
-  email              String          @unique
+  username           String?   @unique
+  usernameUpdatedAt  DateTime?
+  email              String    @unique
   emailVerified      DateTime?
   image              String?
   password           String?
-  role               UserRole        @default(USER)
-  bio                String?         @db.Text
+  role               UserRole  @default(USER)
+  bio                String?   @db.Text
   university         String?
   major              String?
   graduationYear     Int?
-  onboarded          Boolean         @default(false)
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  lastActiveAt       DateTime        @default(now())
+  onboarded          Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  lastActiveAt       DateTime  @default(now())
   avatar             String?
   coverPhoto         String?
   currentYear        String?
@@ -38,66 +38,66 @@ model User {
   githubUrl          String?
   linkedinUrl        String?
   location           String?
-  phoneNumber        String?         @unique // prevent duplicate phone
+  phoneNumber        String?   @unique // prevent duplicate phone
   preferredStudyTime String?
-  profileCompleted   Boolean         @default(false)
-  studyGoals         String[]        @default([])
-  subjects           String[]        @default([])
+  profileCompleted   Boolean   @default(false)
+  studyGoals         String[]  @default([])
+  subjects           String[]  @default([])
   twitterUrl         String?
   websiteUrl         String?
 
   // Account Status
-  isActive           Boolean         @default(true) // soft delete / ban
-  isSuspended        Boolean         @default(false)
-  suspendedAt        DateTime?
-  suspendedReason    String?
-  deletedAt          DateTime?       // soft delete timestamp
+  isActive        Boolean   @default(true) // soft delete / ban
+  isSuspended     Boolean   @default(false)
+  suspendedAt     DateTime?
+  suspendedReason String?
+  deletedAt       DateTime? // soft delete timestamp
 
   // AI Usage Tracking
-  aiTokensUsed       Int             @default(0)
-  aiTokensLimit      Int             @default(100000)
-  aiTokensResetAt    DateTime?       // when to reset token count
+  aiTokensUsed    Int       @default(0)
+  aiTokensLimit   Int       @default(100000)
+  aiTokensResetAt DateTime? // when to reset token count
 
   // Social Features — counters maintained via transactions
-  followersCount     Int             @default(0)
-  followingCount     Int             @default(0)
-  isOnline           Boolean         @default(false)
-  lastSeenAt         DateTime        @default(now())
+  followersCount Int      @default(0)
+  followingCount Int      @default(0)
+  isOnline       Boolean  @default(false)
+  lastSeenAt     DateTime @default(now())
 
   // Relations
-  accounts           Account[]
-  sessions           Session[]
-  materials          Material[]      @relation("UserMaterials")
-  materialsSharedBy  MaterialShare[] @relation("SharedByUser")
-  sharedMaterials    MaterialShare[] @relation("SharedMaterials")
-  aiConversations    AiConversation[] @relation("UserConversations")
+  accounts          Account[]
+  sessions          Session[]
+  materials         Material[]       @relation("UserMaterials")
+  materialsSharedBy MaterialShare[]  @relation("SharedByUser")
+  sharedMaterials   MaterialShare[]  @relation("SharedMaterials")
+  aiConversations   AiConversation[] @relation("UserConversations")
 
   // Social Relations
-  followers              Follow[]              @relation("Following")
-  following              Follow[]              @relation("Follower")
-  publicMessages         PublicMessage[]        @relation("PublicMessages")
-  privateConversations1  PrivateConversation[] @relation("PrivateUser1")
-  privateConversations2  PrivateConversation[] @relation("PrivateUser2")
-  privateMessages        PrivateMessage[]      @relation("PrivateMessages")
-  posts                  Post[]                @relation("Posts")
-  postLikes              PostLike[]            @relation("PostLikes")
-  comments               Comment[]             @relation("Comments")
+  followers             Follow[]              @relation("Following")
+  following             Follow[]              @relation("Follower")
+  publicMessages        PublicMessage[]       @relation("PublicMessages")
+  privateConversations1 PrivateConversation[] @relation("PrivateUser1")
+  privateConversations2 PrivateConversation[] @relation("PrivateUser2")
+  privateMessages       PrivateMessage[]      @relation("PrivateMessages")
+  posts                 Post[]                @relation("Posts")
+  postLikes             PostLike[]            @relation("PostLikes")
+  comments              Comment[]             @relation("Comments")
 
   // Notifications
-  notifications          Notification[]        @relation("UserNotifications")
-  notificationsTriggered Notification[]        @relation("ActorNotifications")
+  notifications          Notification[] @relation("UserNotifications")
+  notificationsTriggered Notification[] @relation("ActorNotifications")
 
   // Study Groups
-  createdGroups        StudyGroup[]        @relation("CreatedGroups")
-  groupMemberships     GroupMember[]       @relation("GroupMemberships")
-  sharedGroupMaterials GroupMaterial[]     @relation("SharedGroupMaterials")
-  groupInvitations     GroupInvitation[]   @relation("GroupInvitations")
-  sentGroupInvitations GroupInvitation[]   @relation("SentGroupInvitations")
-  groupJoinRequests    GroupJoinRequest[]  @relation("GroupJoinRequests")
+  createdGroups        StudyGroup[]       @relation("CreatedGroups")
+  groupMemberships     GroupMember[]      @relation("GroupMemberships")
+  sharedGroupMaterials GroupMaterial[]    @relation("SharedGroupMaterials")
+  groupInvitations     GroupInvitation[]  @relation("GroupInvitations")
+  sentGroupInvitations GroupInvitation[]  @relation("SentGroupInvitations")
+  groupJoinRequests    GroupJoinRequest[] @relation("GroupJoinRequests")
 
   // Reporting
-  reportsFiled         Report[]            @relation("ReportsFiled")
-  reportsReceived      Report[]            @relation("ReportsReceived")
+  reportsFiled    Report[] @relation("ReportsFiled")
+  reportsReceived Report[] @relation("ReportsReceived")
 
   @@index([email])
   @@index([role])
@@ -126,7 +126,7 @@ model Account {
   id_token          String? @db.Text
   session_state     String?
 
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -138,10 +138,10 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  userAgent    String?  // track device info
-  ipAddress    String?  // track login location
+  userAgent    String? // track device info
+  ipAddress    String? // track login location
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expires])
@@ -169,41 +169,42 @@ model VerificationToken {
 // ============================================
 
 model Material {
-  id               String             @id @default(cuid())
-  title            String
-  description      String?            @db.Text
-  type             MaterialType
-  fileUrl          String
-  fileName         String
-  fileSize         Int
-  mimeType         String
-  userId           String
-  subject          String?
-  tags             String[]           @default([])
-  status           MaterialStatus     @default(PENDING)
-  visibility       MaterialVisibility @default(PRIVATE)
+  id          String             @id @default(cuid())
+  slug        String             @unique @default(cuid())
+  title       String
+  description String?            @db.Text
+  type        MaterialType
+  fileUrl     String
+  fileName    String
+  fileSize    Int
+  mimeType    String
+  userId      String
+  subject     String?
+  tags        String[]           @default([])
+  status      MaterialStatus     @default(PENDING)
+  visibility  MaterialVisibility @default(PRIVATE)
 
   // Processing
-  isProcessed      Boolean            @default(false)
+  isProcessed      Boolean          @default(false)
   processedAt      DateTime?
-  processingStatus ProcessingStatus   @default(PENDING)
-  processingError  String?            @db.Text
+  processingStatus ProcessingStatus @default(PENDING)
+  processingError  String?          @db.Text
   chunkCount       Int?
 
   // Stats
-  viewCount        Int                @default(0)
-  downloadCount    Int                @default(0)
-  shareCount       Int                @default(0)
+  viewCount     Int @default(0)
+  downloadCount Int @default(0)
+  shareCount    Int @default(0)
 
   // Timestamps
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user             User               @relation("UserMaterials", fields: [userId], references: [id], onDelete: Cascade)
-  sharedWith       MaterialShare[]    @relation("MaterialShares")
-  chunks           MaterialChunk[]    @relation("MaterialChunks")
-  groupMaterials   GroupMaterial[]    @relation("GroupMaterials")
+  user           User            @relation("UserMaterials", fields: [userId], references: [id], onDelete: Cascade)
+  sharedWith     MaterialShare[] @relation("MaterialShares")
+  chunks         MaterialChunk[] @relation("MaterialChunks")
+  groupMaterials GroupMaterial[] @relation("GroupMaterials")
 
   @@index([userId])
   @@index([subject])
@@ -228,9 +229,9 @@ model MaterialShare {
   createdAt        DateTime  @default(now())
   expiresAt        DateTime?
 
-  material         Material  @relation("MaterialShares", fields: [materialId], references: [id], onDelete: Cascade)
-  sharedBy         User      @relation("SharedByUser", fields: [sharedByUserId], references: [id], onDelete: Cascade)
-  sharedWithUser   User      @relation("SharedMaterials", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+  material       Material @relation("MaterialShares", fields: [materialId], references: [id], onDelete: Cascade)
+  sharedBy       User     @relation("SharedByUser", fields: [sharedByUserId], references: [id], onDelete: Cascade)
+  sharedWithUser User     @relation("SharedMaterials", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
 
   @@unique([materialId, sharedWithUserId])
   @@index([sharedWithUserId])
@@ -241,16 +242,16 @@ model MaterialShare {
 }
 
 model MaterialChunk {
-  id          String                       @id @default(cuid())
-  materialId  String
-  chunkText   String                       @map("chunk_text") @db.Text
-  chunkIndex  Int                          @map("chunk_index")
-  embedding   Unsupported("vector(3072)")
-  metadata    Json?                        @default("{}")
-  tokenCount  Int?                         // track token size per chunk
-  createdAt   DateTime                     @default(now()) @map("created_at")
+  id         String                      @id @default(cuid())
+  materialId String
+  chunkText  String                      @map("chunk_text") @db.Text
+  chunkIndex Int                         @map("chunk_index")
+  embedding  Unsupported("vector(3072)")
+  metadata   Json?                       @default("{}")
+  tokenCount Int? // track token size per chunk
+  createdAt  DateTime                    @default(now()) @map("created_at")
 
-  material    Material @relation("MaterialChunks", fields: [materialId], references: [id], onDelete: Cascade)
+  material Material @relation("MaterialChunks", fields: [materialId], references: [id], onDelete: Cascade)
 
   @@unique([materialId, chunkIndex]) // prevent duplicate chunks
   @@index([materialId], map: "material_chunks_material_id_idx")
@@ -263,21 +264,21 @@ model MaterialChunk {
 // ============================================
 
 model AiConversation {
-  id             String      @id @default(cuid())
-  title          String      @default("New Conversation")
-  userId         String
-  materialIds    String[]    @default([])
-  model          String      @default("gemini-pro")
-  temperature    Float       @default(0.7)
-  totalTokens    Int         @default(0) // running total for conversation
-  messageCount   Int         @default(0)
-  isArchived     Boolean     @default(false)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  lastMessageAt  DateTime?
+  id            String    @id @default(cuid())
+  title         String    @default("New Conversation")
+  userId        String
+  materialIds   String[]  @default([])
+  model         String    @default("gemini-pro")
+  temperature   Float     @default(0.7)
+  totalTokens   Int       @default(0) // running total for conversation
+  messageCount  Int       @default(0)
+  isArchived    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime?
 
-  user           User        @relation("UserConversations", fields: [userId], references: [id], onDelete: Cascade)
-  messages       AiMessage[]
+  user     User        @relation("UserConversations", fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
 
   @@index([userId])
   @@index([lastMessageAt])
@@ -287,18 +288,18 @@ model AiConversation {
 }
 
 model AiMessage {
-  id               String         @id @default(cuid())
+  id               String        @id @default(cuid())
   conversationId   String
   role             AiMessageRole
-  content          String         @db.Text
+  content          String        @db.Text
   sources          Json?
   promptTokens     Int?
   completionTokens Int?
   totalTokens      Int?
-  latencyMs        Int?           // track API response time
-  createdAt        DateTime       @default(now())
+  latencyMs        Int? // track API response time
+  createdAt        DateTime      @default(now())
 
-  conversation     AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([createdAt])
@@ -311,14 +312,14 @@ model AiMessage {
 // ============================================
 
 model Follow {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   followerId  String
   followingId String
 
-  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
-  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([followerId, followingId])
   @@index([followerId])
@@ -332,15 +333,15 @@ model Follow {
 // ============================================
 
 model PublicChannel {
-  id          String          @id @default(cuid())
-  name        String          @unique // prevent duplicate channel names
-  topic       String?         @db.Text
-  subject     String?
-  isActive    Boolean         @default(true)
-  isArchived  Boolean         @default(false)
-  messages    PublicMessage[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id         String          @id @default(cuid())
+  name       String          @unique // prevent duplicate channel names
+  topic      String?         @db.Text
+  subject    String?
+  isActive   Boolean         @default(true)
+  isArchived Boolean         @default(false)
+  messages   PublicMessage[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 
   @@index([subject])
   @@index([isActive])
@@ -374,20 +375,20 @@ model PublicMessage {
 // ============================================
 
 model PrivateConversation {
-  id               String           @id @default(cuid())
-  user1Id          String
-  user2Id          String
-  user1            User             @relation("PrivateUser1", fields: [user1Id], references: [id], onDelete: Cascade)
-  user2            User             @relation("PrivateUser2", fields: [user2Id], references: [id], onDelete: Cascade)
-  messages         PrivateMessage[]
-  lastMessageAt    DateTime?
-  lastMessageText  String?          @db.VarChar(255) // limit preview length
-  unreadCount1     Int              @default(0) // unread for user1
-  unreadCount2     Int              @default(0) // unread for user2
-  isBlocked        Boolean          @default(false)
-  blockedBy        String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  id              String           @id @default(cuid())
+  user1Id         String
+  user2Id         String
+  user1           User             @relation("PrivateUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2           User             @relation("PrivateUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  messages        PrivateMessage[]
+  lastMessageAt   DateTime?
+  lastMessageText String?          @db.VarChar(255) // limit preview length
+  unreadCount1    Int              @default(0) // unread for user1
+  unreadCount2    Int              @default(0) // unread for user2
+  isBlocked       Boolean          @default(false)
+  blockedBy       String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   @@unique([user1Id, user2Id])
   @@index([user1Id, lastMessageAt])
@@ -424,21 +425,21 @@ model PrivateMessage {
 // ============================================
 
 model Post {
-  id          String    @id @default(cuid())
-  authorId    String
-  author      User      @relation("Posts", fields: [authorId], references: [id], onDelete: Cascade)
-  caption     String?   @db.Text
-  images      Json?
-  materialId  String?
-  likesCount  Int       @default(0)
-  commentCount Int      @default(0) // denormalized counter
-  isDeleted   Boolean   @default(false)
-  deletedAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  authorId     String
+  author       User      @relation("Posts", fields: [authorId], references: [id], onDelete: Cascade)
+  caption      String?   @db.Text
+  images       Json?
+  materialId   String?
+  likesCount   Int       @default(0)
+  commentCount Int       @default(0) // denormalized counter
+  isDeleted    Boolean   @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  likes       PostLike[]  @relation("PostLikes")
-  comments    Comment[]   @relation("PostComments")
+  likes    PostLike[] @relation("PostLikes")
+  comments Comment[]  @relation("PostComments")
 
   @@index([authorId])
   @@index([createdAt])
@@ -463,18 +464,18 @@ model PostLike {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   postId    String
-  post      Post     @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
+  post      Post      @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
   authorId  String
-  author    User     @relation("Comments", fields: [authorId], references: [id], onDelete: Cascade)
-  content   String   @db.Text
-  parentId  String?  // for nested replies
-  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  author    User      @relation("Comments", fields: [authorId], references: [id], onDelete: Cascade)
+  content   String    @db.Text
+  parentId  String? // for nested replies
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comment[] @relation("CommentReplies")
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isDeleted Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@index([postId, createdAt])
   @@index([authorId])
@@ -494,11 +495,11 @@ model Notification {
   content   String           @db.Text
   link      String?
   read      Boolean          @default(false)
-  readAt    DateTime?        // when it was read
+  readAt    DateTime? // when it was read
   createdAt DateTime         @default(now())
 
-  user      User             @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
-  actor     User?            @relation("ActorNotifications", fields: [actorId], references: [id], onDelete: SetNull)
+  user  User  @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("ActorNotifications", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([userId, read, createdAt]) // unread notifications
   @@index([userId, createdAt])
@@ -513,6 +514,7 @@ model Notification {
 
 model StudyGroup {
   id            String       @id @default(cuid())
+  slug          String       @unique @default(cuid())
   name          String
   description   String?      @db.Text
   subject       String
@@ -594,7 +596,7 @@ model GroupInvitation {
   status        InvitationStatus @default(PENDING)
   message       String?          @db.Text // invitation message
   expiresAt     DateTime
-  respondedAt   DateTime?        // when accepted/rejected
+  respondedAt   DateTime? // when accepted/rejected
   createdAt     DateTime         @default(now())
 
   @@unique([groupId, invitedUserId])
@@ -628,20 +630,20 @@ model GroupJoinRequest {
 // ============================================
 
 model Report {
-  id          String       @id @default(cuid())
-  reporterId  String
-  reporter    User         @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
-  targetId    String       // ID of reported entity
-  targetType  ReportTarget // what type of entity
-  targetUserId String?     // user who owns the reported content
-  targetUser   User?       @relation("ReportsReceived", fields: [targetUserId], references: [id], onDelete: SetNull)
-  reason      ReportReason
-  description String?      @db.Text
-  status      ReportStatus @default(PENDING)
-  reviewedBy  String?
-  reviewedAt  DateTime?
-  resolution  String?      @db.Text
-  createdAt   DateTime     @default(now())
+  id           String       @id @default(cuid())
+  reporterId   String
+  reporter     User         @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetId     String // ID of reported entity
+  targetType   ReportTarget // what type of entity
+  targetUserId String? // user who owns the reported content
+  targetUser   User?        @relation("ReportsReceived", fields: [targetUserId], references: [id], onDelete: SetNull)
+  reason       ReportReason
+  description  String?      @db.Text
+  status       ReportStatus @default(PENDING)
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  resolution   String?      @db.Text
+  createdAt    DateTime     @default(now())
 
   @@index([status, createdAt])
   @@index([reporterId])

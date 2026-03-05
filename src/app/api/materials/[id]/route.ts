@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { cache } from '@/lib/redis'
+import { resolveMaterialId } from '@/lib/resolvers'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -21,15 +22,18 @@ type RouteContext = { params: Promise<{ id: string }> }
 
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await context.params
+    const params = await context.params
+    const resolvedId = await resolveMaterialId(params.id)
+    if (!resolvedId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Cache the material query for 60 seconds (unique to the requesting user due to sharedWith relation)
     const material = await cache.get(
-      `material:${id}:user:${session.user.id}`,
+      `material:${resolvedId}:user:${session.user.id}`,
       () => prisma.material.findUnique({
-        where: { id },
+        where: { id: resolvedId },
         include: { 
           user: { select: { id: true, username: true, name: true, avatar: true, image: true, university: true } },
           sharedWith: { where: { sharedWithUserId: session.user.id } }
@@ -89,11 +93,14 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await context.params
+    const params = await context.params
+    const resolvedId = await resolveMaterialId(params.id)
+    if (!resolvedId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const material = await prisma.material.findUnique({ where: { id } })
+    const material = await prisma.material.findUnique({ where: { id: resolvedId } })
     if (!material) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     if (material.userId !== session.user.id && session.user.role !== 'ADMIN') {
@@ -107,7 +114,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     }
 
     const updated = await prisma.material.update({
-      where: { id },
+      where: { id: resolvedId },
       data: parsed.data,
       include: { user: { select: { id: true, name: true, avatar: true, image: true } } }
     })
@@ -121,18 +128,21 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
 export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await context.params
+    const params = await context.params
+    const resolvedId = await resolveMaterialId(params.id)
+    if (!resolvedId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const material = await prisma.material.findUnique({ where: { id } })
+    const material = await prisma.material.findUnique({ where: { id: resolvedId } })
     if (!material) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     if (material.userId !== session.user.id && session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    await prisma.material.delete({ where: { id } })
+    await prisma.material.delete({ where: { id: resolvedId } })
 
     // Invalidate dashboard count cache
     await cache.del(`user:${session.user.id}:materials:count`)

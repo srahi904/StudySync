@@ -114,7 +114,7 @@ export function GlobalSearch() {
                 <CommandItem
                   key={m.id}
                   value={`material-${m.id}-${m.title}`}
-                  onSelect={() => runCommand(() => router.push(`/materials/${m.id}`))}
+                  onSelect={() => runCommand(() => router.push(`/materials/${m.slug || m.id}`))}
                 >
                   <FileText className="mr-2 h-4 w-4 text-primary" />
                   <div className="flex flex-col">

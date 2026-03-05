@@ -116,7 +116,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
             {recentMaterials.map((m: any) => (
               <Link
                 key={m.id}
-                href={`/materials/${m.id}`}
+                href={`/materials/${m.slug || m.id}`}
                 className="group flex items-start gap-3 p-4 rounded-xl border border-border bg-card hover:shadow-md hover:border-primary/30 transition-all"
               >
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">

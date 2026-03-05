@@ -9,7 +9,10 @@ import { TypeBadge } from './type-badge'
 import { StatusBadge } from './status-badge'
 import { formatFileSize, timeAgo } from '@/lib/materials/material-utils'
 
-type MaterialWithUser = Material & { user?: Pick<User, 'id' | 'name' | 'avatar' | 'image'> }
+type MaterialWithUser = Material & { 
+  user?: Pick<User, 'id' | 'name' | 'avatar' | 'image'>,
+  slug?: string | null
+}
 
 interface MaterialListItemProps {
   material: MaterialWithUser
@@ -38,7 +41,7 @@ export function MaterialListItem({ material, currentUserId, onDelete, showStatus
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <Link href={`/materials/${material.id}`} className="hover:text-primary transition-colors">
+        <Link href={`/materials/${material.slug || material.id}`} className="hover:text-primary transition-colors">
           <h3 className="font-semibold text-sm truncate group-hover:text-primary">{material.title}</h3>
         </Link>
         {material.subject && (
@@ -76,14 +79,14 @@ export function MaterialListItem({ material, currentUserId, onDelete, showStatus
           {menuOpen && (
             <div className="absolute right-0 top-9 w-36 bg-card border border-border rounded-xl shadow-xl z-10 overflow-hidden">
               <Link
-                href={`/materials/${material.id}`}
+                href={`/materials/${material.slug || material.id}`}
                 className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
                 onClick={() => setMenuOpen(false)}
               >
                 <ExternalLink className="w-3.5 h-3.5" /> View
               </Link>
               <Link
-                href={`/materials/${material.id}/edit`}
+                href={`/materials/${material.slug || material.id}/edit`}
                 className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
                 onClick={() => setMenuOpen(false)}
               >

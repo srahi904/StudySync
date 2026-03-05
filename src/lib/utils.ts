@@ -9,6 +9,20 @@ export function generateToken() {
   return require('crypto').randomBytes(32).toString('hex')
 }
 
+export function generateSlug(text: string) {
+  const shortId = Math.random().toString(36).substring(2, 8)
+  const normalized = text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .substring(0, 50)
+  
+  if (!normalized) return shortId
+  return `${normalized}-${shortId}`
+}
+
 export function addHours(date: Date, hours: number) {
   const newDate = new Date(date)
   newDate.setHours(newDate.getHours() + hours)

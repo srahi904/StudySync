@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { triggerPusherEvent } from '@/lib/pusher/server';
 import { CHANNELS, EVENTS } from '@/lib/pusher/channels';
+import { resolveMaterialId } from '@/lib/resolvers';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -12,7 +13,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: materialId } = await params;
+    const { id } = await params;
+    const materialId = await resolveMaterialId(id);
+    if (!materialId) {
+      return NextResponse.json({ error: 'Material not found' }, { status: 404 });
+    }
+
     const userId = session.user.id;
 
     // Verify material exists

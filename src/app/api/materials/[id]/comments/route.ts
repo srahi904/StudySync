@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { triggerPusherEvent } from '@/lib/pusher/server';
 import { CHANNELS, EVENTS } from '@/lib/pusher/channels';
+import { resolveMaterialId } from '@/lib/resolvers';
 
 // GET: Fetch comments for a material
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -13,7 +14,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: materialId } = await params;
+    const { id } = await params;
+    const materialId = await resolveMaterialId(id);
+    if (!materialId) {
+      return NextResponse.json({ error: 'Material not found' }, { status: 404 });
+    }
 
     // Find the associated post
     const post = await prisma.post.findFirst({
@@ -50,7 +55,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: materialId } = await params;
+    const { id } = await params;
+    const materialId = await resolveMaterialId(id);
+    if (!materialId) {
+      return NextResponse.json({ error: 'Material not found' }, { status: 404 });
+    }
+    
     const { content } = await req.json();
     const userId = session.user.id;
 

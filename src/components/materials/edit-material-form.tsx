@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
 import { PREDEFINED_SUBJECTS } from '@/lib/materials/material-utils'
-import { Tag, X, Globe, Lock, Save } from 'lucide-react'
+import { Tag, X, Globe, Lock, Save, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface EditMaterialFormProps {
@@ -33,6 +33,7 @@ export function EditMaterialForm({ material, onSuccess, onCancel, redirectAfterS
   const [tagInput, setTagInput] = useState('')
   const [isPublic, setIsPublic] = useState(material.isPublic)
   const [saving, setSaving] = useState(false)
+  const [generatingAi, setGeneratingAi] = useState(false)
 
   const addTag = (tag: string) => {
     const clean = tag.trim().toLowerCase().replace(/\s+/g, '-')
@@ -52,6 +53,31 @@ export function EditMaterialForm({ material, onSuccess, onCancel, redirectAfterS
     isPublic !== material.isPublic
 
   const isValid = title.trim().length >= 3
+
+  const handleGenerateDescription = async () => {
+    if (!title || title.trim().length < 3) {
+      toast({ title: 'Please enter a valid title first', variant: 'destructive' })
+      return
+    }
+
+    setGeneratingAi(true)
+    try {
+      const res = await fetch('/api/ai/generate-description', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, subject, existingDescription: description }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate')
+      
+      setDescription(data.description)
+      toast({ title: '✨ Description generated!' })
+    } catch (err: any) {
+      toast({ title: 'AI Generation Failed', description: err.message, variant: 'destructive' })
+    } finally {
+      setGeneratingAi(false)
+    }
+  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -109,7 +135,20 @@ export function EditMaterialForm({ material, onSuccess, onCancel, redirectAfterS
       {!compact && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="edit-description" className="text-sm">Description</Label>
+            <div className="flex items-center gap-3">
+              <Label htmlFor="edit-description" className="text-sm">Description</Label>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleGenerateDescription}
+                disabled={saving || generatingAi || !title.trim()}
+                className="h-7 text-xs gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border-0"
+              >
+                {generatingAi ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Generate with AI
+              </Button>
+            </div>
             <span className="text-xs text-muted-foreground">{description.length}/1000</span>
           </div>
           <textarea
