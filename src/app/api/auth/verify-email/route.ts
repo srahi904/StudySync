@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET as string,
     })
 
-    if (!decoded || !decoded.name || !decoded.email || !decoded.password || decoded.email !== email) {
+    if (!decoded || !decoded.name || !decoded.username || !decoded.email || !decoded.password || decoded.email !== email) {
       return NextResponse.json(
         { success: false, message: 'Invalid signup session. Please register again.' },
         { status: 400 }
@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
       await prisma.user.create({
         data: {
           name: decoded.name as string,
+          username: decoded.username as string,
           email: decoded.email as string,
           password: decoded.password as string,
           emailVerified: new Date(),

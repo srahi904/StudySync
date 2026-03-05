@@ -250,7 +250,7 @@ export default function MaterialDetailPage() {
               )}
             </div>
             <div>
-              <Link href={`/profile/${material.userId}`} className="font-semibold text-sm hover:underline">
+              <Link href={`/profile/${material.user?.username || material.userId}`} className="font-semibold text-sm hover:underline">
                 {material.user?.name || 'Unknown User'}
               </Link>
               <div className="text-xs text-muted-foreground flex items-center gap-1.5">

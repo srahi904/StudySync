@@ -67,6 +67,12 @@ export function SignupForm() {
         </div>
 
         <div className="space-y-1.5">
+          <Label htmlFor="username">Username</Label>
+          <Input id="username" placeholder="johndoe123" autoComplete="username" {...register('username')} />
+          {errors.username && <p className="text-xs text-red-400">{errors.username.message}</p>}
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor="email">Email address</Label>
           <Input id="email" type="email" placeholder="you@example.com" autoComplete="email" {...register('email')} />
           {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}

@@ -16,10 +16,13 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { OnlineIndicator } from '@/components/chat/online-indicator';
 import { useActiveList } from '@/components/chat/active-status-provider';
+import { EditProfileModal } from '@/components/profile/edit-profile-modal';
 
 interface UserProfile {
   id: string;
   name: string;
+  username?: string | null;
+  usernameUpdatedAt?: string | null;
   email: string;
   avatar?: string | null;
   image?: string | null;
@@ -168,37 +171,47 @@ export default function UserProfilePage() {
             </div>
 
             {/* Name + actions */}
-            <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
-              <div className="min-w-0">
-                <h1 className="text-2xl font-bold truncate">{profile.name}</h1>
-                {profile.university && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
-                    <GraduationCap className="w-4 h-4" />
-                    {profile.university}
-                    {profile.major && ` · ${profile.major}`}
-                  </p>
-                )}
-              </div>
-
-              {!isOwnProfile && (
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <FollowButton
-                    userId={profile.id}
-                    initialFollowing={followStatus.following}
-                    onFollowChange={handleFollowChange}
-                  />
-                  {followStatus.mutual && (
-                    <button
-                      onClick={handleMessage}
-                      className="px-4 py-2 rounded-full border border-border text-sm font-semibold hover:bg-muted/50 transition-colors flex items-center gap-1.5"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Message
-                    </button>
+              <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+                <div className="min-w-0">
+                  <h1 className="text-2xl font-bold truncate">{profile.name}</h1>
+                  {profile.username && (
+                    <p className="text-sm font-medium text-primary">@{profile.username}</p>
+                  )}
+                  {profile.university && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                      <GraduationCap className="w-4 h-4" />
+                      {profile.university}
+                      {profile.major && ` · ${profile.major}`}
+                    </p>
                   )}
                 </div>
-              )}
-            </div>
+
+                {!isOwnProfile ? (
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <FollowButton
+                      userId={profile.id}
+                      initialFollowing={followStatus.following}
+                      onFollowChange={handleFollowChange}
+                    />
+                    {followStatus.mutual && (
+                      <button
+                        onClick={handleMessage}
+                        className="px-4 py-2 rounded-full border border-border text-sm font-semibold hover:bg-muted/50 transition-colors flex items-center gap-1.5"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Message
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <EditProfileModal 
+                      user={profile} 
+                      onUpdate={(updatedUser) => setProfile({ ...profile, ...updatedUser })} 
+                    />
+                  </div>
+                )}
+              </div>
           </div>
 
           {/* Bio */}

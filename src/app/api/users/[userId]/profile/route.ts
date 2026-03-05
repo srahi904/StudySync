@@ -15,17 +15,22 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId } = await params;
+    const identifier = await params.then(p => p.userId);
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId, isActive: true },
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ id: identifier }, { username: identifier }],
+        isActive: true,
+      },
       select: {
         id: true,
         name: true,
+        username: true,
         email: true,
         avatar: true,
         image: true,
         coverPhoto: true,
+        usernameUpdatedAt: true,
         bio: true,
         university: true,
         major: true,
@@ -49,17 +54,17 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const isOwnProfile = userId === session.user.id;
+    const isOwnProfile = user.id === session.user.id;
 
     // Check follow status
     let followStatus = { following: false, followedBy: false, mutual: false };
     if (!isOwnProfile) {
       const [follow1, follow2] = await Promise.all([
         prisma.follow.findUnique({
-          where: { followerId_followingId: { followerId: session.user.id, followingId: userId } },
+          where: { followerId_followingId: { followerId: session.user.id, followingId: user.id } },
         }),
         prisma.follow.findUnique({
-          where: { followerId_followingId: { followerId: userId, followingId: session.user.id } },
+          where: { followerId_followingId: { followerId: user.id, followingId: session.user.id } },
         }),
       ]);
       followStatus = {
@@ -70,7 +75,7 @@ export async function GET(
     }
 
     // Get materials based on visibility
-    const materialsWhere: Record<string, unknown> = { userId };
+    const materialsWhere: Record<string, unknown> = { userId: user.id };
     if (!isOwnProfile) {
       if (followStatus.following) {
         // Followers can see all materials (Public, Private, Group Only)
@@ -104,15 +109,115 @@ export async function GET(
     // Count total materials
     const totalMaterials = await prisma.material.count({ where: materialsWhere });
 
-    return NextResponse.json({
-      user,
-      followStatus,
-      isOwnProfile,
-      materials,
-      totalMaterials,
-    });
+    return NextResponse.json(
+      {
+        user,
+        followStatus,
+        isOwnProfile,
+        materials,
+        totalMaterials,
+      },
+      {
+        headers: { 'Cache-Control': 'private, max-age=30' }
+      }
+    );
   } catch (error) {
     console.error('Profile error:', error);
     return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
+  }
+}
+
+// PATCH: Update user profile
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const identifier = await params.then(p => p.userId);
+
+    // Resolve the identifier to the actual DB ID
+    const targetUser = await prisma.user.findFirst({
+      where: { OR: [{ id: identifier }, { username: identifier }] },
+      select: { id: true, username: true, usernameUpdatedAt: true }
+    });
+
+    if (!targetUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    const targetUserId = targetUser.id;
+
+    if (!session?.user?.id || session.user.id !== targetUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    
+    // 1. Basic field updates
+    const updateData: any = {};
+    if (body.name) updateData.name = body.name;
+    if (body.avatar) updateData.avatar = body.avatar;
+    if (body.coverPhoto) updateData.coverPhoto = body.coverPhoto;
+    if (body.bio !== undefined) updateData.bio = body.bio;
+    if (body.university !== undefined) updateData.university = body.university;
+    if (body.major !== undefined) updateData.major = body.major;
+    if (body.location !== undefined) updateData.location = body.location;
+    if (body.subjects) updateData.subjects = body.subjects;
+    if (body.studyGoals) updateData.studyGoals = body.studyGoals;
+    if (body.linkedinUrl !== undefined) updateData.linkedinUrl = body.linkedinUrl;
+    if (body.githubUrl !== undefined) updateData.githubUrl = body.githubUrl;
+    if (body.websiteUrl !== undefined) updateData.websiteUrl = body.websiteUrl;
+
+    // 2. Handle Username Update with Restrictions
+    if (body.username) {
+      const newUsername = body.username.toLowerCase().trim();
+      
+      // Validation (fallback if frontend fails)
+      if (newUsername.length < 5 || !/^[a-z0-9_]+$/.test(newUsername)) {
+        return NextResponse.json({ error: 'Invalid username format' }, { status: 400 });
+      }
+
+      const currentUser = targetUser; // We already fetched this
+
+      if (currentUser?.username !== newUsername) {
+        // Enforce 30-day rule
+        if (currentUser?.username && currentUser.usernameUpdatedAt) {
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          
+          if (currentUser.usernameUpdatedAt > thirtyDaysAgo) {
+            const nextUpdate = new Date(currentUser.usernameUpdatedAt);
+            nextUpdate.setDate(nextUpdate.getDate() + 30);
+            return NextResponse.json({ 
+              error: `Username can only be changed once every 30 days. Next available: ${nextUpdate.toLocaleDateString()}` 
+            }, { status: 429 });
+          }
+        }
+
+        // Check uniqueness
+        const existing = await prisma.user.findUnique({
+          where: { username: newUsername }
+        });
+        
+        if (existing) {
+          return NextResponse.json({ error: 'Username is already taken' }, { status: 409 });
+        }
+
+        updateData.username = newUsername;
+        updateData.usernameUpdatedAt = new Date();
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: targetUserId },
+      data: updateData
+    });
+
+    return NextResponse.json({
+      success: true,
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Profile update error:', error);
+    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
   }
 }

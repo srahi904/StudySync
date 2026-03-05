@@ -52,14 +52,14 @@ export function LoginForm() {
 
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <div className="flex-1 h-px bg-border" />
-        Or continue with email
+        Or continue with username or email
         <div className="flex-1 h-px bg-border" />
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email address</Label>
-          <Input id="email" type="email" placeholder="you@example.com" autoComplete="email" {...register('email')} />
+          <Label htmlFor="email">Username or Email</Label>
+          <Input id="email" type="text" placeholder="you@example.com or johndoe123" autoComplete="username" {...register('email')} />
           {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
         </div>
 

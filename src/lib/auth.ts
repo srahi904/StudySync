@@ -32,17 +32,24 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required')
+          throw new Error('Email/username and password are required')
         }
 
+        const identifier = credentials.email.toLowerCase()
+
         // Optimized: select only needed fields
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: identifier },
+              { username: identifier }
+            ]
+          },
           select: {
             id: true,
             name: true,
+            username: true, // Added username field
             email: true,
-            image: true,
             password: true,
             role: true,
             emailVerified: true,
@@ -53,7 +60,7 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user || !user.password) {
-          throw new Error('No account found with this email')
+          throw new Error('No account found with this email or username')
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.password)
@@ -92,6 +99,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
+        token.username = (user as any).username
         token.role = user.role
         token.emailVerified = user.emailVerified
         token.onboarded = user.onboarded
@@ -113,6 +121,7 @@ export const authOptions: NextAuthOptions = {
     // ─── Session: expose token data to client ─────────────
     async session({ session, token }) {
       session.user.id = token.id
+      session.user.username = token.username
       session.user.role = token.role
       session.user.emailVerified = token.emailVerified
       session.user.onboarded = token.onboarded
@@ -126,15 +135,44 @@ export const authOptions: NextAuthOptions = {
       // Allow credentials sign-in through
       if (account?.type === 'credentials') return true
 
-      // For OAuth: auto-verify email + set defaults
+      // For OAuth: auto-verify email + setup username
       if (account?.type === 'oauth' && user.email) {
-        await prisma.user.update({
+        const dbUser = await prisma.user.findUnique({
           where: { email: user.email },
-          data: {
-            emailVerified: new Date(),
-            name: user.name ?? 'User',
-          },
-        }).catch(() => {}) // Ignore if user doesn't exist yet (first OAuth)
+          select: { id: true, username: true }
+        })
+
+        if (dbUser && !dbUser.username) {
+          let baseUsername = (user.name || user.email.split('@')[0])
+            .toLowerCase()
+            .replace(/[^a-z0-9_]/g, '')
+          
+          if (baseUsername.length < 5) baseUsername = baseUsername.padEnd(5, '0')
+          
+          let finalUsername = baseUsername
+          let isUnique = false
+          let counter = 1
+
+          while (!isUnique) {
+            const existing = await prisma.user.findUnique({
+              where: { username: finalUsername }
+            })
+            if (!existing) {
+              isUnique = true
+            } else {
+              finalUsername = `${baseUsername}${counter}`
+              counter++
+            }
+          }
+
+          await prisma.user.update({
+            where: { id: dbUser.id },
+            data: { 
+              username: finalUsername,
+              emailVerified: new Date(),
+            },
+          })
+        }
       }
 
       return true

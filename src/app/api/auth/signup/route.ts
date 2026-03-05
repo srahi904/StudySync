@@ -21,15 +21,23 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { name, email, password } = result.data
+    const { name, username, email, password } = result.data
 
     // ── 2. Check for existing user ───────────────────────
-    const existing = await prisma.user.findUnique({ where: { email } })
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { username }
+        ]
+      }
+    })
+
     if (existing) {
-      return NextResponse.json(
-        { success: false, message: 'An account with this email already exists.' },
-        { status: 409 }
-      )
+      const message = existing.email === email 
+        ? 'An account with this email already exists.'
+        : 'This username is already taken.'
+      return NextResponse.json({ success: false, message }, { status: 409 })
     }
 
     // ── 3. Hash password ─────────────────────────────────
@@ -37,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     // ── 4. Create pending session cookie ────────────────
     const token = await encode({
-      token: { name, email, password: hashedPassword } as any,
+      token: { name, username, email, password: hashedPassword } as any,
       secret: process.env.NEXTAUTH_SECRET as string,
     })
 

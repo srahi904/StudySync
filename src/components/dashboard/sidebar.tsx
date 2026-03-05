@@ -188,7 +188,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold truncate">{user.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  { (user as any).username ? `@${(user as any).username}` : user.email }
+                </p>
               </div>
             </div>
           )}

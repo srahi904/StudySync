@@ -42,7 +42,9 @@ export function UserMenu() {
           {/* User info */}
           <div className="px-4 py-3 border-b border-border bg-card">
             <p className="font-semibold text-sm">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {(user as any).username ? `@${(user as any).username}` : user.email}
+            </p>
           </div>
 
           {/* Menu items */}

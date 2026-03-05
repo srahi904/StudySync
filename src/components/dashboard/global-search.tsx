@@ -134,7 +134,7 @@ export function GlobalSearch() {
                 <CommandItem
                   key={u.id}
                   value={`user-${u.id}-${u.name}`}
-                  onSelect={() => runCommand(() => router.push(`/profile/${u.id}`))}
+                  onSelect={() => runCommand(() => router.push(`/profile/${u.username || u.id}`))}
                 >
                   <User className="mr-2 h-4 w-4 text-blue-500" />
                   <div className="flex flex-col">

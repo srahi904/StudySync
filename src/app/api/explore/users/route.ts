@@ -54,12 +54,17 @@ export async function GET(request: NextRequest) {
 
     const followingSet = new Set(followingIds.map((f) => f.followingId));
 
-    return NextResponse.json({
-      users: users.map((u) => ({
-        ...u,
-        isFollowing: followingSet.has(u.id),
-      })),
-    });
+    return NextResponse.json(
+      {
+        users: users.map((u) => ({
+          ...u,
+          isFollowing: followingSet.has(u.id),
+        })),
+      },
+      {
+        headers: { 'Cache-Control': 'private, max-age=60' }
+      }
+    );
   } catch (error) {
     console.error('Search users error:', error);
     return NextResponse.json({ error: 'Failed to search users' }, { status: 500 });

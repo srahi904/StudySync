@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         actorId: session.user.id,
         type: 'FOLLOW',
         content: `${session.user.name} started following you`,
-        link: `/profile/${session.user.id}`,
+        link: `/profile/${session.user.username || session.user.id}`,
       });
 
       // Still trigger the specific NEW_FOLLOWER event for active live lists

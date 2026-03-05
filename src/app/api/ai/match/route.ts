@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     // 3. Find potentially matching Users (>85% match)
     const allUsers = await prisma.user.findMany({
       where: { id: { not: userId }, isActive: true },
-      select: { id: true, name: true, subjects: true, studyGoals: true },
+      select: { id: true, username: true, name: true, subjects: true, studyGoals: true },
       take: 100 // limit to recent/active users ideally
     })
 
@@ -76,9 +76,9 @@ export async function POST(req: NextRequest) {
           await createNotification({
             userId,
             actorId: targetUser.id,
-            type: 'SUGGEST_USER' as NotificationType,
+            type: 'SUGGEST_USER',
             content: `We found a ~${Math.round(score * 100)}% profile match! Connect with ${targetUser.name}`,
-            link: `/profile/${targetUser.id}`
+            link: `/profile/${targetUser.username || targetUser.id}`
           })
           matchFound = true
           break // Send one suggestion at a time

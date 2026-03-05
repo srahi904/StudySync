@@ -10,8 +10,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { isOnline } = body;
+    let body = {};
+    try {
+      const text = await req.text();
+      body = text ? JSON.parse(text) : {};
+    } catch {
+      body = {};
+    }
+
+    const { isOnline } = body as any;
 
     await prisma.user.update({
       where: { id: session.user.id },

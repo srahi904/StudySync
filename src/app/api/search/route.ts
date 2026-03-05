@@ -57,6 +57,7 @@ export async function GET(req: NextRequest) {
       },
       select: {
         id: true,
+        username: true,
         name: true,
         university: true,
         major: true,
@@ -67,10 +68,15 @@ export async function GET(req: NextRequest) {
 
     const [materials, users] = await Promise.all([materialsPromise, usersPromise])
 
-    return NextResponse.json({
-      success: true,
-      data: { materials, users }
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: { materials, users }
+      },
+      {
+        headers: { 'Cache-Control': 'private, max-age=60' }
+      }
+    )
   } catch (error) {
     console.error('[GET /api/search]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -8,6 +8,7 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string
+      username: string | null
       role: UserRole
       emailVerified: Date | null
       onboarded: boolean
@@ -16,6 +17,7 @@ declare module 'next-auth' {
     } & DefaultSession['user']
   }
   interface User extends DefaultUser {
+    username: string | null
     role: UserRole
     emailVerified: Date | null
     onboarded: boolean
@@ -27,6 +29,7 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
     id: string
+    username: string | null
     role: UserRole
     emailVerified: Date | null
     onboarded: boolean
@@ -78,6 +81,7 @@ export interface OnboardingData {
 export interface UserProfile {
   id: string
   name: string
+  username: string | null
   email: string
   image: string | null
   avatar: string | null
@@ -95,6 +99,7 @@ export interface UserProfile {
   websiteUrl: string | null
   subjects: string[]
   studyGoals: string[]
+  usernameUpdatedAt: Date | null
   createdAt: Date
   lastActiveAt: Date
 }

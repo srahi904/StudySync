@@ -31,7 +31,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
       () => prisma.material.findUnique({
         where: { id },
         include: { 
-          user: { select: { id: true, name: true, avatar: true, image: true, university: true } },
+          user: { select: { id: true, username: true, name: true, avatar: true, image: true, university: true } },
           sharedWith: { where: { sharedWithUserId: session.user.id } }
         }
       }),

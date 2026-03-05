@@ -31,6 +31,7 @@ interface ChatWindowProps {
   conversationId: string;
   otherUser: {
     id: string;
+    username?: string | null;
     name: string;
     avatar?: string | null;
     image?: string | null;
@@ -176,8 +177,8 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="relative flex-shrink-0">
+        <Link href={`/profile/${otherUser.username || otherUser.id}`} className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="relative flex-shrink-0 w-10 h-10">
             <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />

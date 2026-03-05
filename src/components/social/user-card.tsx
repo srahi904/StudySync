@@ -9,6 +9,7 @@ import { MapPin, GraduationCap, Users } from 'lucide-react';
 interface UserCardProps {
   user: {
     id: string;
+    username?: string | null;
     name: string;
     email: string;
     avatar?: string | null;
@@ -32,7 +33,7 @@ export function UserCard({ user, currentUserId }: UserCardProps) {
     <div className="bg-card border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
       <div className="flex items-start gap-4">
         {/* Avatar */}
-        <Link href={`/profile/${user.id}`} className="flex-shrink-0">
+        <Link href={`/profile/${user.username || user.id}`} className="flex-shrink-0">
           <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-primary to-secondary flex items-center justify-center ring-2 ring-border group-hover:ring-primary/30 transition-all">
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -46,7 +47,7 @@ export function UserCard({ user, currentUserId }: UserCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <Link href={`/profile/${user.id}`} className="font-semibold text-foreground hover:text-primary transition-colors truncate block">
+              <Link href={`/profile/${user.username || user.id}`} className="font-semibold text-foreground hover:text-primary transition-colors truncate block">
                 {user.name}
               </Link>
               {user.university && (

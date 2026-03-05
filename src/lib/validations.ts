@@ -18,6 +18,11 @@ export const SignupSchema = z
       .min(2, 'Name must be at least 2 characters')
       .max(50, 'Name must be less than 50 characters')
       .regex(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes'),
+    username: z
+      .string()
+      .min(5, 'Username must be at least 5 characters')
+      .max(20, 'Username must be less than 20 characters')
+      .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
     email: z.string().email('Please enter a valid email address').toLowerCase(),
     password: passwordSchema,
     confirmPassword: z.string(),
@@ -29,7 +34,7 @@ export const SignupSchema = z
   })
 
 export const LoginSchema = z.object({
-  email: z.string().email('Please enter a valid email address').toLowerCase(),
+  email: z.string().min(1, 'Email or username is required').toLowerCase(),
   password: z.string().min(1, 'Password is required'),
   remember: z.boolean().optional(),
 })
@@ -71,6 +76,12 @@ export const OnboardingSchema = z.object({
 // ─── Update profile schema ─────────────────────────────────
 export const UpdateProfileSchema = z.object({
   name: z.string().min(2).max(50).optional(),
+  username: z
+    .string()
+    .min(5, 'Username must be at least 5 characters')
+    .max(20, 'Username must be less than 20 characters')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores')
+    .optional(),
   bio: z.string().max(500).optional().or(z.literal('')),
   university: z.string().max(100).optional().or(z.literal('')),
   major: z.string().max(100).optional().or(z.literal('')),

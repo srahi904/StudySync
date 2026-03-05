@@ -82,7 +82,8 @@ export function ActiveStatusProvider() {
         const data = JSON.stringify({ isOnline: false });
         
         if (navigator.sendBeacon) {
-          navigator.sendBeacon(url, data);
+          const blob = new Blob([data], { type: 'application/json' });
+          navigator.sendBeacon(url, blob);
         } else {
           // Fallback if sendBeacon not available
           fetch(url, {
