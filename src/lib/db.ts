@@ -1,26 +1,22 @@
-// src/lib/db.ts — Neon serverless + Prisma v7 compatible
+// src/lib/db.ts — Neon serverless + Prisma v7 (works on localhost AND Vercel)
 import { PrismaClient } from '@prisma/client'
 import { PrismaNeon } from '@prisma/adapter-neon'
-import { Pool, neonConfig } from '@neondatabase/serverless'
+import { neonConfig } from '@neondatabase/serverless'
 
-// Use fetch-based transport on Vercel (no raw WebSockets needed in serverless)
-// On local dev, the Pool will use a regular TCP connection automatically
-if (typeof WebSocket === 'undefined') {
-  // Node.js environment (local dev) — use ws for WebSocket support
+// In Node.js (local dev), we need to provide a WebSocket implementation.
+// On Vercel serverless, the Neon driver uses HTTP fetch by default.
+if (typeof globalThis.WebSocket === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const ws = require('ws')
-  neonConfig.webSocketConstructor = ws
+  neonConfig.webSocketConstructor = require('ws')
 }
 
-// Create a Neon connection pool using the pooled connection string
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+// PrismaNeon (v7.4.2) expects a PoolConfig object, NOT a Pool instance.
+// It creates and manages the Pool internally.
+const adapter = new PrismaNeon({
+  connectionString: process.env.DATABASE_URL!,
 })
 
-// Create the Prisma adapter powered by Neon
-const adapter = new PrismaNeon(pool)
-
-// Singleton pattern to avoid multiple PrismaClient instances in dev (hot reload)
+// Singleton pattern to avoid multiple PrismaClient instances during hot reload
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
