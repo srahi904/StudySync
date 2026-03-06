@@ -8,14 +8,11 @@ import ws from 'ws'
 neonConfig.webSocketConstructor = ws
 
 // ═══ NEON ADAPTER (Connection pooling via config) ═══
-import { Pool } from '@neondatabase/serverless'
-
-const pool = new Pool({
+const adapter = new PrismaNeon({
   connectionString: process.env.DATABASE_URL!,
   connectionTimeoutMillis: 5000,
   max: 10,
 })
-const adapter = new PrismaNeon(pool)
 
 // ═══ SINGLETON PATTERN ═══
 const globalForPrisma = globalThis as unknown as {
