@@ -8,7 +8,7 @@ import { MessageInput } from '@/components/chat/message-input';
 import { TypingIndicator } from '@/components/chat/typing-indicator';
 import { usePusherMulti } from '@/hooks/use-pusher';
 import { CHANNELS, EVENTS } from '@/lib/pusher/channels';
-import { Hash, Users, Loader2, Plus } from 'lucide-react';
+import { Hash, Users, Loader2, Plus, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playNotificationSound } from '@/lib/utils/audio';
 
@@ -35,6 +35,7 @@ export default function PublicChatFullScreenPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null);
+  const [showSidebar, setShowSidebar] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -184,7 +185,10 @@ export default function PublicChatFullScreenPage() {
   return (
     <div className="flex h-full bg-card overflow-hidden">
       {/* Channels Sidebar */}
-      <div className="w-64 border-r border-border bg-card flex flex-col flex-shrink-0 hidden md:flex">
+      <div className={cn(
+        "w-full md:w-64 border-r border-border bg-card flex-col flex-shrink-0 z-20",
+        showSidebar ? "flex" : "hidden md:flex"
+      )}>
         <div className="p-4 border-b border-border bg-muted/20">
           <h2 className="font-bold text-lg flex items-center gap-2">
             <Hash className="w-5 h-5 text-primary" />
@@ -201,7 +205,10 @@ export default function PublicChatFullScreenPage() {
             channels.map((ch) => (
               <button
                 key={ch.id}
-                onClick={() => setActiveChannel(ch)}
+                onClick={() => {
+                  setActiveChannel(ch);
+                  setShowSidebar(false);
+                }}
                 className={cn(
                   'w-full flex items-center gap-3 px-4 py-2 hover:bg-muted/50 transition-colors text-left',
                   activeChannel?.id === ch.id && 'bg-primary/10 text-primary border-r-2 border-primary'
@@ -218,11 +225,20 @@ export default function PublicChatFullScreenPage() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-background relative">
+      <div className={cn(
+        "flex-1 flex-col min-w-0 bg-background relative",
+        showSidebar ? "hidden md:flex" : "flex"
+      )}>
         {/* Header */}
-        <div className="h-16 border-b border-border bg-card sticky top-0 z-10 flex items-center px-4 md:px-6">
-          <div className="flex items-center gap-2">
-            <Hash className="w-5 h-5 text-primary" />
+        <div className="h-16 border-b border-border bg-card sticky top-0 z-10 flex items-center px-4 md:px-6 shrink-0">
+          <div className="flex items-center">
+            <button
+              onClick={() => setShowSidebar(true)}
+              className="md:hidden mr-3 p-1.5 -ml-1 text-muted-foreground hover:bg-muted/50 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <Hash className="w-5 h-5 text-primary mr-2" />
             <h1 className="font-bold text-lg">{activeChannel?.name || 'Loading...'}</h1>
             {activeChannel?.topic && (
               <>
