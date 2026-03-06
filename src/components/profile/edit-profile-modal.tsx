@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
 import { useSession } from 'next-auth/react'
-import { Camera, Loader2, User, AtSign, FileText } from 'lucide-react'
+import { Camera, Loader2, User, AtSign, FileText, ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface EditProfileModalProps {
@@ -31,13 +31,15 @@ export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
   
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [uploading, setUploading] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [uploadingCover, setUploadingCover] = useState(false)
   
   const [formData, setFormData] = useState({
     name: user.name || '',
     username: user.username || '',
     bio: user.bio || '',
-    avatar: user.avatar || user.image || ''
+    avatar: user.avatar || user.image || '',
+    coverPhoto: user.coverPhoto || ''
   })
 
   // Check if username can be edited (once every 30 days)
@@ -53,7 +55,7 @@ export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    setUploading(true)
+    setUploadingAvatar(true)
     const toastId = toast({
       title: 'Uploading avatar...',
       description: 'Please wait while we process your image.'
@@ -63,15 +65,15 @@ export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
       const data = new FormData()
       data.append('file', file)
 
-      const res = await fetch('/api/users/avatar', {
+      const res = await fetch('/api/upload/avatar', {
         method: 'POST',
         body: data
       })
 
       if (!res.ok) throw new Error('Upload failed')
       
-      const { url } = await res.json()
-      setFormData(prev => ({ ...prev, avatar: url }))
+      const { data: uploadData } = await res.json()
+      setFormData(prev => ({ ...prev, avatar: uploadData.url }))
       
       toast({
         title: 'Success!',
@@ -80,11 +82,50 @@ export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
     } catch (err) {
       toast({
         title: 'Error',
-        description: 'Failed to upload image. Please try again.',
+        description: 'Failed to upload avatar. Please try again.',
         variant: 'destructive'
       })
     } finally {
-      setUploading(false)
+      setUploadingAvatar(false)
+    }
+  }
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingCover(true)
+    const toastId = toast({
+      title: 'Uploading cover photo...',
+      description: 'Please wait while we process your image.'
+    })
+
+    try {
+      const data = new FormData()
+      data.append('file', file)
+
+      const res = await fetch('/api/upload/cover', {
+        method: 'POST',
+        body: data
+      })
+
+      if (!res.ok) throw new Error('Upload failed')
+      
+      const { data: uploadData } = await res.json()
+      setFormData(prev => ({ ...prev, coverPhoto: uploadData.url }))
+      
+      toast({
+        title: 'Success!',
+        description: 'Cover photo uploaded successfully.'
+      })
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to upload cover photo. Please try again.',
+        variant: 'destructive'
+      })
+    } finally {
+      setUploadingCover(false)
     }
   }
 
@@ -142,6 +183,7 @@ export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
   }
 
   const isUsernameLocked = !canEditUsername()
+  const isUploading = uploadingAvatar || uploadingCover;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -157,30 +199,54 @@ export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="p-6 space-y-6">
+          
+          {/* Cover Photo Upload */}
+          <div className="relative h-32 w-full bg-muted mt-2 group">
+            {formData.coverPhoto ? (
+              <img src={formData.coverPhoto} alt="Cover" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-primary/20 via-secondary/10 to-primary/20">
+                <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+              </div>
+            )}
+            <label className={cn(
+              "absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity",
+              uploadingCover && "opacity-100 pointer-events-none"
+            )}>
+              {uploadingCover ? (
+                <Loader2 className="w-6 h-6 text-white animate-spin" />
+              ) : (
+                <span className="flex items-center gap-2 text-white text-sm font-medium bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                  <Camera className="w-4 h-4" /> Change Cover
+                </span>
+              )}
+              <input type="file" accept="image/*" className="sr-only" onChange={handleCoverUpload} disabled={isUploading} />
+            </label>
+          </div>
+
+          <div className="p-6 pt-0 space-y-6">
             {/* Avatar Section */}
-            <div className="flex flex-col items-center gap-4 py-2">
+            <div className="relative flex justify-center -mt-12 mb-4">
               <div className="relative group">
-                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-muted bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-card bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center shadow-md">
                   {formData.avatar ? (
                     <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    <User className="w-12 h-12 text-muted-foreground" />
+                    <User className="w-10 h-10 text-muted-foreground" />
                   )}
                 </div>
                 <label className={cn(
                   "absolute inset-0 flex items-center justify-center bg-black/40 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity",
-                  uploading && "opacity-100 pointer-events-none"
+                  uploadingAvatar && "opacity-100 pointer-events-none"
                 )}>
-                  {uploading ? (
+                  {uploadingAvatar ? (
                     <Loader2 className="w-6 h-6 text-white animate-spin" />
                   ) : (
                     <Camera className="w-6 h-6 text-white" />
                   )}
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarUpload} disabled={uploading} />
+                  <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarUpload} disabled={isUploading} />
                 </label>
               </div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Profile Picture</p>
             </div>
 
             <div className="grid gap-5">
@@ -247,7 +313,7 @@ export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
                   value={formData.bio}
                   onChange={e => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                   placeholder="Tell us about yourself..."
-                  className="rounded-xl border-border focus:ring-primary/20 resize-none min-h-[100px]"
+                  className="rounded-xl border-border focus:ring-primary/20 resize-none min-h-[80px]"
                 />
               </div>
             </div>
@@ -259,14 +325,14 @@ export function EditProfileModal({ user, onUpdate }: EditProfileModalProps) {
               variant="ghost"
               onClick={() => setOpen(false)}
               className="flex-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-transparent"
-              disabled={loading || uploading}
+              disabled={loading || isUploading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="flex-1 rounded-xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
-              disabled={loading || uploading}
+              disabled={loading || isUploading}
             >
               {loading ? (
                 <span className="flex items-center gap-2">
