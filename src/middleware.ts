@@ -25,20 +25,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check auth via JWT (no DB query — fast)
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  })
+  // Fast cookie check for existing session (bulletproof in edge environments)
+  const hasAuthCookie = 
+    request.cookies.has('next-auth.session-token') || 
+    request.cookies.has('__Secure-next-auth.session-token')
 
   // Auth routes — redirect to dashboard if already logged in
   if (['/', '/login', '/signup'].includes(pathname)) {
-    if (token) {
+    if (hasAuthCookie) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
     // If no token and it's a public path, let them through
     return NextResponse.next()
   }
+
+  // Check auth via JWT for protected routes (requires secret)
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  })
 
   // Other public paths that shouldn't redirect logged-in users
   // but also don't require auth (e.g. /about)

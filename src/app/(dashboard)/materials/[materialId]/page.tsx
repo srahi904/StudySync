@@ -55,6 +55,9 @@ export default function MaterialDetailPage() {
             setHasLiked(data.data.post.hasLiked || false)
             setCommentCount(data.data.post.commentCount || 0)
           }
+        } else if (matRes.status === 403) {
+          toast({ title: 'Access Denied', description: 'This material is private.', variant: 'destructive' })
+          router.push('/dashboard')
         } else if (matRes.status === 404) {
           router.push('/materials')
         }

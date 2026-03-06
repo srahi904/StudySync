@@ -190,7 +190,6 @@ export default function PublicChatFullScreenPage() {
             <Hash className="w-5 h-5 text-primary" />
             Public Channels
           </h2>
-          <p className="text-sm text-muted-foreground">Discord-style rooms</p>
         </div>
         
         <div className="flex-1 overflow-y-auto py-3">

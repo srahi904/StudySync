@@ -1,7 +1,7 @@
 // src/lib/materials/use-materials.ts
 // Custom React hook for fetching materials with filters and pagination
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Material, MaterialType, MaterialStatus, User } from '@prisma/client'
 import { MaterialFiltersState } from '@/components/materials/material-filters'
 
@@ -31,22 +31,26 @@ export function useMaterials({ filters, page = 1, limit = 20, userId }: UseMater
 
   const reload = useCallback(() => setReloadKey(k => k + 1), [])
 
+  const serializedFilters = useMemo(() => JSON.stringify(filters), [filters])
+
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
 
+    const currentFilters = JSON.parse(serializedFilters) as MaterialFiltersState
+
     const params = new URLSearchParams({
       page: String(page),
       limit: String(limit),
-      sortBy: filters.sortBy,
-      sortOrder: filters.sortOrder,
+      sortBy: currentFilters.sortBy,
+      sortOrder: currentFilters.sortOrder,
     })
 
-    if (filters.types.length > 0) params.set('type', filters.types[0]) // First type or extend for multi
-    if (filters.subjects.length > 0) params.set('subject', filters.subjects[0])
-    if (filters.statuses.length > 0) params.set('status', filters.statuses[0])
-    if (filters.isPublic !== undefined) params.set('isPublic', String(filters.isPublic))
+    if (currentFilters.types.length > 0) params.set('type', currentFilters.types[0])
+    if (currentFilters.subjects.length > 0) params.set('subject', currentFilters.subjects[0])
+    if (currentFilters.statuses.length > 0) params.set('status', currentFilters.statuses[0])
+    if (currentFilters.isPublic !== undefined) params.set('isPublic', String(currentFilters.isPublic))
     if (userId) params.set('userId', userId)
 
     fetch(`/api/materials?${params.toString()}`)
@@ -68,7 +72,7 @@ export function useMaterials({ filters, page = 1, limit = 20, userId }: UseMater
       })
 
     return () => { cancelled = true }
-  }, [filters, page, limit, userId, reloadKey])
+  }, [serializedFilters, page, limit, userId, reloadKey])
 
   return { materials, pagination, loading, error, reload }
 }
