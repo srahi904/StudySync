@@ -10,7 +10,7 @@ import { OnlineIndicator } from './online-indicator';
 import { usePusherMulti } from '@/hooks/use-pusher';
 import { CHANNELS, EVENTS } from '@/lib/pusher/channels';
 import { useActiveList } from '@/components/chat/active-status-provider';
-import { ArrowLeft, Loader2, MessageSquare, Phone, Video, Info } from 'lucide-react';
+import { ArrowLeft, Loader2, MessageSquare, Phone, Video, Info, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/utils';
 import { playNotificationSound } from '@/lib/utils/audio';
@@ -213,7 +213,7 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
           </Link>
         </div>
         
-        <div className="flex items-center gap-4 text-muted-foreground">
+        <div className="flex items-center gap-4 text-muted-foreground mr-2">
           <button className="hover:text-foreground transition-colors p-1" title="Voice call">
             <Phone className="w-5 h-5" />
           </button>
@@ -222,6 +222,10 @@ export function ChatWindow({ conversationId, otherUser, onBack }: ChatWindowProp
           </button>
           <button className="hover:text-foreground transition-colors p-1" title="Information">
             <Info className="w-5 h-5" />
+          </button>
+          <div className="w-px h-5 bg-border mx-1"></div>
+          <button onClick={onBack} className="hover:text-destructive transition-colors p-1" title="Close chat">
+            <X className="w-5 h-5" />
           </button>
         </div>
       </div>
